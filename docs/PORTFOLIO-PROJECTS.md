@@ -859,3 +859,605 @@ Let the agent handle boilerplate while you focus on logic:
 4. **Ask "why" not just "how"** — when the agent writes something you don't understand, ask it to explain
 5. **Review everything** — never copy-paste blindly. Read line by line, understand it, then use it.
 6. **Test yourself first** — try writing the code yourself first. If you're stuck, show the agent your attempt and ask what's wrong.
+
+---
+
+# Blog-Aligned Projects — Build What You Write About
+
+## Why These Projects?
+
+The 5 projects above are standalone portfolio pieces. The 6 projects below are **companion repos for each blog post** on the site. Every blog article claims you built something — these projects are the proof. Each one maps 1:1 to a blog post URL and covers the exact technologies discussed in that article.
+
+---
+
+## Project 6: MQTT Telemetry Pipeline (Blog: mqtt-grafana)
+
+**Blog post:** `blog/mqtt-grafana.html`
+**Repo name:** `mqtt-telemetry-pipeline`
+
+### What You Build
+A production-style pipeline: simulated IoT sensors → Mosquitto MQTT broker → Python subscriber → PostgreSQL → Grafana dashboard. Everything runs in Docker Compose.
+
+### Tech Coverage
+Python, paho-mqtt, Mosquitto, PostgreSQL, psycopg2, Grafana, Docker Compose, SQL
+
+### Folder Structure
+```
+mqtt-telemetry-pipeline/
+├── docker-compose.yml
+├── mosquitto/
+│   └── mosquitto.conf
+├── subscriber/
+│   ├── main.py                # MQTT subscriber → PostgreSQL
+│   ├── db.py                  # Connection pool, insert logic
+│   ├── requirements.txt
+│   └── Dockerfile
+├── simulator/
+│   ├── sensor.py              # Generates fake telemetry
+│   ├── requirements.txt
+│   └── Dockerfile
+├── grafana/
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── postgres.yml   # Auto-configure PG datasource
+│       └── dashboards/
+│           ├── dashboard.yml
+│           └── telemetry.json # Pre-built dashboard
+├── sql/
+│   └── init.sql               # Schema + indexes
+├── .env.example
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — Schema & subscriber**
+
+> "I'm building an MQTT telemetry pipeline. Write `sql/init.sql` with a `telemetry` table: columns `id BIGSERIAL`, `device_id VARCHAR(64)`, `metric VARCHAR(32)`, `value DOUBLE PRECISION`, `ts TIMESTAMPTZ DEFAULT NOW()`. Add indexes on `(ts DESC)` and `(device_id, ts DESC)`. Add a comment explaining why the composite index matters."
+
+> "Write `subscriber/db.py` using psycopg2 with a connection pool (`psycopg2.pool.ThreadedConnectionPool`, min=2, max=10). Two functions: `init_pool(dsn)` and `insert_telemetry(device_id, metric, value)`. The insert function should get a connection from the pool, execute the INSERT, commit, and return the connection to the pool. Include error handling that returns the connection on failure too."
+
+> "Write `subscriber/main.py` — a Python MQTT subscriber using paho-mqtt. It should: connect to broker (host/port/user/pass from env vars), subscribe to `devices/+/telemetry` with QoS 1, parse JSON payloads with keys `device_id`, `type`, `value`, and call `insert_telemetry()` from db.py. Use `loop_forever()`. Log connection events and errors."
+
+**Phase 2 — Simulator**
+
+> "Write `simulator/sensor.py` — a Python script that simulates 5 IoT sensors publishing to MQTT. Each sensor has a device_id (sensor-001 through sensor-005) and publishes temperature, humidity, or vibration. Temperature should drift between 18-35°C with Gaussian noise (std=0.5). Publish every 2 seconds per sensor using paho-mqtt to topic `devices/{device_id}/telemetry`. Read broker host/port/credentials from env vars."
+
+**Phase 3 — Docker Compose**
+
+> "Write `docker-compose.yml` with these services:
+> - `mqtt`: eclipse-mosquitto:2, port 1883, mounts `./mosquitto/mosquitto.conf`, with authentication
+> - `db`: postgres:16-alpine, with env vars from `.env`, a named volume `pgdata`, health check using `pg_isready`, mounts `./sql/init.sql` to `/docker-entrypoint-initdb.d/`
+> - `subscriber`: builds from `./subscriber`, depends on `db` (service_healthy) and `mqtt`, env vars for DB and MQTT
+> - `simulator`: builds from `./simulator`, depends on `mqtt`, env vars for MQTT
+> - `grafana`: grafana/grafana-oss:latest, port 3000, mounts `./grafana/provisioning`, depends on `db`
+> All services on a shared `backend` network. Include `.env.example` with all required variables."
+
+> "Write `mosquitto/mosquitto.conf` with: listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/passwd`. Add a comment in the README explaining how to generate the password file with `mosquitto_passwd`."
+
+**Phase 4 — Grafana dashboard**
+
+> "Write `grafana/provisioning/datasources/postgres.yml` that auto-configures a PostgreSQL datasource called 'Telemetry DB' pointing to host `db`, port 5432, using env vars for user/pass/dbname."
+
+> "Write `grafana/provisioning/dashboards/telemetry.json` — a Grafana dashboard JSON with 3 panels:
+> 1. Time-series panel: temperature over time (last 6 hours), one line per device_id
+> 2. Stat panel: current average temperature across all devices
+> 3. Table panel: latest 20 telemetry readings
+> All panels query the PostgreSQL datasource. Use the provisioned datasource name."
+
+**Phase 5 — README**
+
+> "Write a README.md for this project. Include: what it does (1 paragraph), architecture diagram (ASCII), tech stack table, prerequisites (Docker, Docker Compose), quick start (`docker compose up`), accessing Grafana at localhost:3000, screenshot placeholder, and a section explaining the design decisions (connection pooling, QoS 1, composite indexes, table partitioning for scale). Link back to the blog post at `https://fahid-khan.github.io/blog/mqtt-grafana.html`."
+
+---
+
+## Project 7: Jenkins IoT Pipeline (Blog: jenkins-iot-pipeline)
+
+**Blog post:** `blog/jenkins-iot-pipeline.html`
+**Repo name:** `jenkins-iot-pipeline`
+
+### What You Build
+A Jenkins CI/CD pipeline for a sample Python IoT backend — lint with ruff, unit tests with pytest, integration tests with Robot Framework (using a custom Python library), Docker image build/push, and staged deployment with manual approval gate.
+
+### Tech Coverage
+Jenkins, Jenkinsfile, Docker, pytest, ruff, Robot Framework, Python, Ansible, Slack webhooks
+
+### Folder Structure
+```
+jenkins-iot-pipeline/
+├── Jenkinsfile
+├── Dockerfile
+├── requirements.txt
+├── src/
+│   ├── app.py                 # Minimal FastAPI app (device API)
+│   ├── routes/
+│   │   ├── devices.py
+│   │   └── telemetry.py
+│   └── config.py
+├── tests/
+│   ├── unit/
+│   │   ├── test_devices.py
+│   │   └── test_telemetry.py
+│   └── robot/
+│       ├── smoke_test.robot
+│       ├── device_api.robot
+│       └── libraries/
+│           └── IoTPlatformLibrary.py
+├── ansible/
+│   ├── deploy.yml
+│   ├── inventory/
+│   │   ├── staging.yml
+│   │   └── production.yml
+│   └── roles/
+│       └── docker-deploy/
+│           └── tasks/main.yml
+├── scripts/
+│   └── notify_slack.sh
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — Sample app to deploy**
+
+> "I'm building a CI/CD demo project. Write a minimal FastAPI app with two route files:
+> - `routes/devices.py`: GET /api/devices (returns hardcoded list of 3 devices with id, name, status), GET /api/devices/{id}
+> - `routes/telemetry.py`: POST /api/telemetry (accepts JSON with device_id, metric, value — validates with Pydantic, returns 201), GET /api/telemetry (returns last 10 entries from an in-memory list)
+> Keep it simple — this app exists just to have something real to build, test, and deploy."
+
+> "Write a multi-stage Dockerfile for this FastAPI app. Stage 1: install dependencies from requirements.txt with `--no-cache-dir`. Stage 2: copy app code, create non-root user `appuser`, expose 8000, run with uvicorn. Here's my requirements.txt: [paste]."
+
+**Phase 2 — Tests**
+
+> "Write pytest unit tests for `routes/devices.py` and `routes/telemetry.py` using FastAPI's TestClient. Test: GET /api/devices returns 200 with a list, GET /api/devices/unknown returns 404, POST /api/telemetry with valid JSON returns 201, POST /api/telemetry with missing fields returns 422. Output JUnit XML to `report.xml`."
+
+> "Write a custom Robot Framework library `IoTPlatformLibrary.py` with these keywords:
+> - `Get Device List` — calls GET /api/devices, returns the JSON list
+> - `Post Telemetry` (device_id, metric, value) — calls POST /api/telemetry
+> - `Device Count Should Be` (expected) — asserts length of device list
+> - `Response Status Should Be` (response, expected_code) — validates status code
+> Use the `requests` library. Accept a `base_url` constructor argument. Set `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`."
+
+> "Write two Robot Framework test suites:
+> - `smoke_test.robot`: verify the API is reachable, device list returns 3 devices, posting telemetry returns 201
+> - `device_api.robot`: test each device endpoint, test invalid device returns 404, test telemetry validation rejects bad payloads
+> Use the IoTPlatformLibrary. Configure the base_url as a Robot variable so it works in staging and production."
+
+**Phase 3 — Jenkinsfile**
+
+> "Write a declarative Jenkinsfile with these stages:
+> 1. Lint — install and run `ruff check src/`
+> 2. Unit Tests — run `pytest tests/unit/ --junitxml=report.xml`, archive results with `junit`
+> 3. Robot Framework — run `robot --outputdir results/ tests/robot/`, archive with the Robot Framework Jenkins plugin, set 95% pass threshold
+> 4. Build & Push — build Docker image tagged with `BUILD_NUMBER`, push to registry (use env vars `REGISTRY` and `IMAGE`)
+> 5. Deploy to Staging — run `ansible-playbook ansible/deploy.yml -i ansible/inventory/staging.yml -e image_tag=${BUILD_NUMBER}`
+> 6. Approval — `input` step with message 'Deploy to production?'
+> 7. Deploy to Production — same ansible command with production inventory
+> Add a `post { failure }` block that calls `scripts/notify_slack.sh`."
+
+**Phase 4 — Ansible deployment**
+
+> "Write an Ansible playbook `ansible/deploy.yml` that:
+> 1. Connects to hosts in the `backend` group
+> 2. Pulls the Docker image `{{ registry }}/{{ image }}:{{ image_tag }}`
+> 3. Stops the existing container if running
+> 4. Starts a new container on port 8000 with `--restart unless-stopped`
+> 5. Waits 10 seconds then runs a health check (curl localhost:8000/health)
+> 6. Fails the playbook if the health check returns non-200
+> Use variables for registry, image, image_tag passed via `-e` on the command line."
+
+> "Write `scripts/notify_slack.sh` — a Bash script that sends a Slack notification. Accept `$SLACK_WEBHOOK` env var. Post a JSON payload with the message 'Pipeline #$BUILD_NUMBER failed for $JOB_NAME'. Include error handling — if curl fails, log to stderr but don't exit non-zero (don't break the pipeline over a notification failure)."
+
+---
+
+## Project 8: Terraform Azure Infrastructure (Blog: terraform-azure)
+
+**Blog post:** `blog/terraform-azure.html`
+**Repo name:** `terraform-azure-iot`
+
+### What You Build
+A real Terraform project that provisions Azure infrastructure: resource group, IoT Hub with storage routes, VNet with subnets and NSGs, remote state in Azure Storage with locking. Structured with reusable modules and separate staging/production environments.
+
+### Tech Coverage
+Terraform, HCL, Azure, Azure IoT Hub, Azure Storage, networking, remote state, CI/CD
+
+### Folder Structure
+```
+terraform-azure-iot/
+├── modules/
+│   ├── networking/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── iot/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── storage/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+├── environments/
+│   ├── staging/
+│   │   ├── main.tf
+│   │   ├── backend.tf
+│   │   ├── variables.tf
+│   │   └── terraform.tfvars
+│   └── production/
+│       ├── main.tf
+│       ├── backend.tf
+│       ├── variables.tf
+│       └── terraform.tfvars
+├── scripts/
+│   ├── bootstrap-state.sh     # One-time: create storage for remote state
+│   └── plan-and-apply.sh      # CI helper script
+├── .github/
+│   └── workflows/
+│       └── terraform.yml      # GitHub Actions: plan on PR, apply on merge
+├── .gitignore
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — Modules**
+
+> "Write a Terraform module at `modules/networking/` that creates:
+> - An Azure resource group
+> - A VNet with address space `10.0.0.0/16`
+> - Two subnets: `backend` (10.0.1.0/24) and `iot` (10.0.2.0/24)
+> - An NSG attached to the backend subnet with rules: allow SSH (22) from a configurable CIDR, allow HTTPS (443) from anywhere, allow MQTT (1883) from the iot subnet only, deny all other inbound
+> Variables: `resource_group_name`, `location`, `allowed_ssh_cidr`, `tags`. Outputs: `resource_group_name`, `vnet_id`, `backend_subnet_id`, `iot_subnet_id`."
+
+> "Write a Terraform module at `modules/iot/` that creates:
+> - An Azure IoT Hub with configurable SKU (name and capacity)
+> - A storage container endpoint for archiving device messages as JSON
+> - A route that sends all DeviceMessages to that storage endpoint
+> - `lifecycle { prevent_destroy = true }` on the IoT Hub
+> Variables: `iot_hub_name`, `resource_group_name`, `location`, `sku_name` (default S1), `sku_capacity` (default 1), `storage_connection_string`, `tags`. Outputs: `iot_hub_name`, `iot_hub_hostname`, `event_hub_endpoint`."
+
+> "Write a Terraform module at `modules/storage/` that creates:
+> - An Azure Storage Account (LRS, Hot tier)
+> - A blob container called `telemetry`
+> - `lifecycle { prevent_destroy = true }` on the storage account
+> Variables: `storage_account_name`, `resource_group_name`, `location`, `tags`. Outputs: `connection_string`, `primary_access_key`, `storage_account_id`."
+
+**Phase 2 — Environments**
+
+> "Write `environments/staging/main.tf` that calls all three modules with staging-appropriate values: S1 IoT Hub with capacity 1, small VNet, tags `{ environment = 'staging', managed-by = 'terraform', project = 'iot-platform' }`. Pass the storage connection string from the storage module output into the iot module."
+
+> "Write `environments/staging/backend.tf` with an `azurerm` backend pointing to a storage account for remote state. Resource group: `rg-terraform-state`, storage account: `stterraformstate`, container: `tfstate`, key: `staging.tfstate`."
+
+> "Write `environments/production/main.tf` — same module calls as staging but with: S2 IoT Hub with capacity 4, production tags. Show how the same modules serve both environments with different tfvars."
+
+**Phase 3 — Bootstrap & CI**
+
+> "Write `scripts/bootstrap-state.sh` — a Bash script that creates the Azure Storage account for Terraform remote state. It should: create the resource group, create the storage account with blob versioning enabled, create the `tfstate` container, and output the storage account name. Use `az` CLI commands. Add comments explaining this is a one-time manual step."
+
+> "Write a GitHub Actions workflow `.github/workflows/terraform.yml` that:
+> - On pull_request: runs `terraform init`, `terraform validate`, `terraform plan` for the staging environment, posts the plan output as a PR comment
+> - On push to main: runs `terraform init`, `terraform plan -out=tfplan`, `terraform apply tfplan` for staging
+> Use OIDC authentication with Azure (federated credentials). Set up job permissions for `id-token: write`. Store the Azure subscription ID, tenant ID, and client ID as GitHub secrets."
+
+**Phase 4 — README**
+
+> "Write a README.md with: project description (1 paragraph), module diagram (show how networking/storage/iot modules compose), prerequisites (Terraform 1.5+, Azure CLI, Azure subscription), setup instructions (bootstrap state, terraform init/plan/apply), environment differences (staging vs production table), CI/CD explanation, and a link to the blog post at `https://fahid-khan.github.io/blog/terraform-azure.html`. Include a gotchas section covering: state drift detection, prevent_destroy, tagging convention."
+
+---
+
+## Project 9: FastAPI Docker Compose Stack (Blog: docker-compose-fastapi)
+
+**Blog post:** `blog/docker-compose-fastapi.html`
+**Repo name:** `fastapi-compose-stack`
+
+### What You Build
+A production-ready Docker Compose setup: multi-stage FastAPI Dockerfile, PostgreSQL with health checks, Redis caching layer, Nginx reverse proxy with static file serving. A template you can fork for any FastAPI project.
+
+### Tech Coverage
+Docker, Docker Compose, FastAPI, Uvicorn, PostgreSQL, Redis, Nginx, Python, multi-stage builds
+
+### Folder Structure
+```
+fastapi-compose-stack/
+├── docker-compose.yml
+├── .env.example
+├── app/
+│   ├── main.py
+│   ├── routes/
+│   │   ├── items.py
+│   │   └── health.py
+│   ├── services/
+│   │   ├── cache.py           # Redis helpers
+│   │   └── database.py        # SQLAlchemy setup
+│   ├── models.py
+│   ├── requirements.txt
+│   └── Dockerfile
+├── nginx/
+│   ├── nginx.conf
+│   └── certs/                 # Self-signed for local dev
+├── static/
+│   └── index.html             # Simple landing page
+├── tests/
+│   ├── test_items.py
+│   └── test_health.py
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — App + Dockerfile**
+
+> "Write a FastAPI app with two route files:
+> - `routes/health.py`: GET /health returns `{ 'status': 'ok', 'db': true, 'cache': true }` — actually ping PostgreSQL and Redis, return false for either if unreachable
+> - `routes/items.py`: CRUD endpoints for a simple Item model (id, name, description, created_at). GET /api/items uses Redis caching with 5-minute TTL. POST/PUT/DELETE invalidate the cache.
+> Use SQLAlchemy async with PostgreSQL. Use `redis.Redis` for caching. Read all connection strings from environment variables."
+
+> "Write `services/database.py` with async SQLAlchemy engine and session setup. Read `DATABASE_URL` from env. Include a `get_db` dependency and an `init_db` function that creates tables on startup."
+
+> "Write `services/cache.py` with Redis connection helpers. Functions: `get_cached(key)`, `set_cached(key, value, ttl=300)`, `invalidate(key)`. Read `REDIS_URL` from env. Decode responses. Handle `ConnectionError` gracefully — return None on cache miss if Redis is down, don't crash the app."
+
+> "Write a multi-stage Dockerfile:
+> - Stage 1 (`builder`): python:3.12-slim, install dependencies from requirements.txt with `--no-cache-dir --prefix=/install`
+> - Stage 2: python:3.12-slim, copy installed packages from builder, copy app code, create non-root user `appuser`, switch to it, expose 8000, CMD uvicorn
+> Keep it under 30 lines."
+
+**Phase 2 — Docker Compose**
+
+> "Write `docker-compose.yml` with 4 services:
+> - `app`: builds from `./app`, env_file `.env`, depends on db (service_healthy) and redis (service_healthy), network: backend
+> - `db`: postgres:16-alpine, env vars for POSTGRES_DB/USER/PASSWORD from `.env`, named volume `pgdata`, health check with `pg_isready`, network: backend
+> - `redis`: redis:7-alpine, `redis-server --requirepass ${REDIS_PASS}`, health check with `redis-cli -a ${REDIS_PASS} ping`, network: backend
+> - `nginx`: nginx:alpine, ports 80:80, mounts `./nginx/nginx.conf` read-only, mounts `./static` to `/var/www/static` read-only, depends on app, network: backend
+> Named volume `pgdata`. Network `backend`."
+
+**Phase 3 — Nginx**
+
+> "Write `nginx/nginx.conf` with an upstream block pointing to `app:8000`. Server block on port 80:
+> - `location /` proxies to the upstream with headers: Host, X-Real-IP, X-Forwarded-For, X-Forwarded-Proto
+> - `location /static/` serves files from `/var/www/static/` with 30-day cache and `Cache-Control: public, immutable`
+> - `location /health` proxies to the upstream (no caching)
+> Include `client_max_body_size 10m` and `proxy_read_timeout 30s`."
+
+**Phase 4 — Tests + README**
+
+> "Write pytest tests using FastAPI TestClient:
+> - `test_health.py`: test /health returns 200 with status ok
+> - `test_items.py`: test CRUD lifecycle — create item, get item, list items, update item, delete item. Each test asserts correct status code and response body.
+> Use fixtures for the test client. Override the database dependency to use an in-memory SQLite for tests."
+
+> "Write a README.md: what it does, architecture diagram (Nginx → FastAPI → PostgreSQL + Redis), tech stack, quick start (`cp .env.example .env && docker compose up`), accessing the API at localhost/api/items, health check at localhost/health, design decisions (why multi-stage, why non-root user, why health checks with depends_on conditions, why named volumes, why never put secrets in compose files). Link to blog post."
+
+---
+
+## Project 10: Ansible Server Automation (Blog: ansible-server-automation)
+
+**Blog post:** `blog/ansible-server-automation.html`
+**Repo name:** `ansible-server-playbooks`
+
+### What You Build
+A set of Ansible playbooks and roles for provisioning Ubuntu servers and deploying Dockerised applications. Includes security hardening, Jinja2 templated configs, Ansible Vault for secrets, and a reusable role structure.
+
+### Tech Coverage
+Ansible, Ansible Vault, Jinja2 templates, Linux, UFW, fail2ban, SSH hardening, Docker, Docker Compose, Bash
+
+### Folder Structure
+```
+ansible-server-playbooks/
+├── ansible.cfg
+├── inventory/
+│   ├── staging.yml
+│   └── production.yml
+├── group_vars/
+│   ├── all.yml
+│   └── production.yml         # Vault-encrypted
+├── roles/
+│   ├── common/
+│   │   ├── tasks/main.yml
+│   │   └── handlers/main.yml
+│   ├── docker/
+│   │   └── tasks/main.yml
+│   ├── app-deploy/
+│   │   ├── tasks/main.yml
+│   │   └── templates/
+│   │       └── docker-compose.yml.j2
+│   └── monitoring/
+│       ├── tasks/main.yml
+│       └── templates/
+│           └── prometheus.yml.j2
+├── playbooks/
+│   ├── provision.yml
+│   ├── deploy.yml
+│   └── monitoring.yml
+├── scripts/
+│   └── vault-password.sh      # Retrieves vault pass from env
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — Common role (security hardening)**
+
+> "Write the Ansible role `roles/common/tasks/main.yml` that:
+> 1. Updates apt cache (cache_valid_time: 3600)
+> 2. Installs: curl, git, ufw, fail2ban, unattended-upgrades
+> 3. Configures UFW: allow ports 22, 80, 443 (tcp), enable UFW with default deny
+> 4. Disables root SSH login via lineinfile on `/etc/ssh/sshd_config`
+> 5. Sets `PasswordAuthentication no` in sshd_config
+> 6. Notifies a handler to restart sshd
+> Write the handler in `roles/common/handlers/main.yml`. All tasks should be idempotent."
+
+**Phase 2 — Docker role**
+
+> "Write `roles/docker/tasks/main.yml` that installs Docker CE on Ubuntu:
+> 1. Install prerequisites: apt-transport-https, ca-certificates, curl, gnupg
+> 2. Add Docker's official GPG key
+> 3. Add Docker apt repository
+> 4. Install docker-ce, docker-ce-cli, containerd.io, docker-compose-plugin
+> 5. Start and enable the docker service
+> 6. Add the `deploy` user to the `docker` group
+> Use the `apt_key`, `apt_repository`, and `apt` modules. Make it idempotent."
+
+**Phase 3 — App deployment role**
+
+> "Write `roles/app-deploy/tasks/main.yml` that:
+> 1. Creates `/opt/app` directory owned by `deploy` user, mode 0755
+> 2. Templates `docker-compose.yml.j2` to `/opt/app/docker-compose.yml` with mode 0600
+> 3. Runs `docker compose pull` in `/opt/app`
+> 4. Runs `docker compose up -d --remove-orphans` in `/opt/app`
+> 5. Waits 15 seconds for services to start
+> 6. Runs a health check: `curl -sf http://localhost:8000/health` — fails the playbook if it returns non-zero
+> Write the Jinja2 template `docker-compose.yml.j2` that uses variables: `{{ docker_registry }}`, `{{ image_name }}`, `{{ image_tag }}`, `{{ db_password }}`, `{{ redis_password }}`."
+
+**Phase 4 — Playbooks, Vault, inventory**
+
+> "Write `playbooks/provision.yml` that runs the `common` and `docker` roles on hosts in the `backend` group with `become: true`."
+
+> "Write `playbooks/deploy.yml` that runs the `app-deploy` role on `backend` hosts. Accept `image_tag` as an extra variable."
+
+> "Write `inventory/staging.yml` with a `backend` group containing one host `staging-server` with `ansible_host`, `ansible_user: deploy`, `ansible_ssh_private_key_file`. Write `group_vars/all.yml` with shared variables: `docker_registry`, `image_name`, `app_port: 8000`. Explain in a comment that `group_vars/production.yml` should be encrypted with Ansible Vault."
+
+> "Write the README.md with: what these playbooks do, role descriptions, prerequisites (Ansible 2.14+, SSH access to target servers), usage examples (`ansible-playbook playbooks/provision.yml -i inventory/staging.yml`), Vault usage (encrypt, decrypt, run with `--ask-vault-pass` and `--vault-password-file`), a section on `--check` dry-run mode, and `ansible-lint` usage. Link to the blog post."
+
+---
+
+## Project 11: Robot Framework Test Suite (Blog: robot-framework-python-libraries)
+
+**Blog post:** `blog/robot-framework-python-libraries.html`
+**Repo name:** `robot-framework-iot-tests`
+
+### What You Build
+A Robot Framework test suite with custom Python libraries for testing MQTT message flows, REST APIs, and JSON payload validation. Includes a library for MQTT (paho-mqtt), a payload validator (jsonschema), and example test suites that exercise an IoT API endpoint.
+
+### Tech Coverage
+Robot Framework, Python, paho-mqtt, jsonschema, MQTT, REST API testing, test automation
+
+### Folder Structure
+```
+robot-framework-iot-tests/
+├── libraries/
+│   ├── MqttTestLibrary.py
+│   ├── PayloadValidator.py
+│   └── DeviceApiLibrary.py
+├── resources/
+│   ├── common.resource
+│   └── schemas/
+│       ├── telemetry.json
+│       └── device_status.json
+├── suites/
+│   ├── mqtt_integration.robot
+│   ├── device_api.robot
+│   ├── payload_validation.robot
+│   └── smoke.robot
+├── results/                   # .gitignore'd
+├── requirements.txt
+├── .github/
+│   └── workflows/
+│       └── tests.yml
+└── README.md
+```
+
+### Step-by-Step Prompts
+
+**Phase 1 — MQTT library**
+
+> "Write `libraries/MqttTestLibrary.py` — a Robot Framework library for MQTT testing. Class attributes: `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`. Constructor takes `broker` (default localhost) and `port` (default 1883). Keywords:
+> - `Connect To Broker` (client_id) — connects with paho-mqtt, starts loop
+> - `Disconnect From Broker` — stops loop, disconnects
+> - `Subscribe To Topic` (topic, qos=1)
+> - `Publish Message` (topic, payload, qos=1) — accepts dict or string, converts to JSON
+> - `Wait For Message` (topic, timeout=10) — polls with 0.1s sleep, returns payload string, raises AssertionError on timeout
+> - `Message Payload Should Contain` (payload, key, expected) — parses JSON, compares value
+> Use a `threading.Lock` to protect the `_messages` dict updated by `on_message` callback."
+
+**Phase 2 — Payload validator**
+
+> "Write `libraries/PayloadValidator.py` — a Robot Framework library with `ROBOT_LIBRARY_SCOPE = 'GLOBAL'`. Keywords:
+> - `Load Schema` (name, schema_path) — loads a JSON schema from file, stores in a dict
+> - `Payload Should Match Schema` (payload, schema_name) — validates using jsonschema.validate, raises AssertionError with the validation error message if it fails
+> Write two JSON schema files in `resources/schemas/`:
+> - `telemetry.json` — requires: device_id (string), type (string, enum: temperature/humidity/vibration), value (number), timestamp (string, format: date-time)
+> - `device_status.json` — requires: device_id (string), status (string, enum: online/offline), last_seen (string, format: date-time)"
+
+**Phase 3 — API library + test suites**
+
+> "Write `libraries/DeviceApiLibrary.py` — a Robot Framework library for testing a REST API. Constructor takes `base_url`. `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`. Keywords:
+> - `Get Devices` — GET /api/devices, returns JSON
+> - `Get Device` (device_id) — GET /api/devices/{device_id}
+> - `Post Telemetry` (device_id, metric, value) — POST /api/telemetry with JSON body
+> - `Response Status Should Be` (response, expected) — asserts status code
+> - `Response Should Contain Key` (response_json, key) — asserts key exists
+> Use the `requests` library."
+
+> "Write 4 Robot Framework test suites:
+> 1. `smoke.robot` — import DeviceApiLibrary, verify API is reachable (GET /health returns 200), device list returns data
+> 2. `device_api.robot` — test full CRUD: get list, get single device, post telemetry, verify posted data appears
+> 3. `mqtt_integration.robot` — import MqttTestLibrary, connect to broker, subscribe to topic, publish message, wait for it, validate payload contains expected keys
+> 4. `payload_validation.robot` — import PayloadValidator, load schemas, test valid telemetry passes, test invalid telemetry (missing field, wrong type) fails
+> Use Suite Setup/Teardown for connections. Use variables for base_url, broker, port so CI can override them."
+
+**Phase 4 — CI + README**
+
+> "Write a GitHub Actions workflow `.github/workflows/tests.yml` that:
+> - Starts a Mosquitto MQTT broker as a service container on port 1883
+> - Installs Python 3.12, pip install requirements.txt
+> - Runs `robot --outputdir results/ suites/`
+> - Uploads results/ as an artifact
+> - Fails the workflow if any test fails"
+
+> "Write README.md: what this project does, how the custom libraries work (library scope explanation with examples), how to run locally (`robot suites/`), how to add new test keywords, CI badge, link to blog post."
+
+---
+
+## Updated Timeline Summary
+
+| # | Project | Type | Primary Blog Post |
+|---|---------|------|-------------------|
+| 1 | DevOps Pipeline Dashboard | Standalone | — |
+| 2 | Cloud Infrastructure Monitor | Standalone | — |
+| 3 | AI-Powered Log Analyzer | Standalone | — |
+| 4 | IoT Sensor Simulator & Platform | Standalone | — |
+| 5 | Self-Service Deployment Platform | Standalone | — |
+| 6 | MQTT Telemetry Pipeline | Blog companion | mqtt-grafana |
+| 7 | Jenkins IoT Pipeline | Blog companion | jenkins-iot-pipeline |
+| 8 | Terraform Azure Infrastructure | Blog companion | terraform-azure |
+| 9 | FastAPI Docker Compose Stack | Blog companion | docker-compose-fastapi |
+| 10 | Ansible Server Automation | Blog companion | ansible-server-automation |
+| 11 | Robot Framework Test Suite | Blog companion | robot-framework-python-libraries |
+
+### Technology Coverage Matrix
+
+| Technology | Covered By Projects |
+|---|---|
+| Python | 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 |
+| FastAPI | 1, 5, 7, 9 |
+| PostgreSQL | 6, 9 |
+| Redis | 9 |
+| MongoDB | 1, 4 |
+| Node.js / Express | 4 |
+| Docker / Compose | 1, 4, 5, 6, 7, 9, 10 |
+| Jenkins | 1, 5, 7 |
+| Ansible / Vault | 4, 5, 7, 10 |
+| Terraform / HCL | 2, 8 |
+| Azure / IoT Hub | 2, 4, 8 |
+| MQTT / Mosquitto | 4, 6, 11 |
+| Grafana | 2, 6 |
+| Robot Framework | 3, 5, 7, 11 |
+| pytest | 1, 3, 7, 9 |
+| Nginx | 7, 9 |
+| Bash / Shell | 2, 7, 8, 10 |
+| Linux / UFW | 10 |
+| Git / GitHub Actions | 2, 3, 8, 9, 11 |
+| Jinja2 | 10 |
+| AI / LLM | 3, 5 |
+
+### Recommended Build Order
+
+**Start with blog companions (Projects 6–11)** — they're smaller, directly back your blog posts, and give you 6 public repos fast. Then tackle the standalone projects (1–5) for deeper portfolio pieces.
+
+1. **Project 9** (FastAPI Compose) — simplest, reusable template, 1–2 days
+2. **Project 6** (MQTT Pipeline) — builds on Project 9 patterns, 2–3 days
+3. **Project 11** (Robot Framework) — standalone test suite, 2 days
+4. **Project 10** (Ansible Playbooks) — no dependencies, 2 days
+5. **Project 7** (Jenkins Pipeline) — uses app from Project 9, 3 days
+6. **Project 8** (Terraform Azure) — needs Azure subscription, 3 days
+7. Then Projects 1–5 in original order
