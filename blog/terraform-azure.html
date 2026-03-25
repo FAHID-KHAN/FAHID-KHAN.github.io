@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A practical guide to using Terraform on Azure — project structure, remote state, modules, and lessons from real-world IaC." />
+    <meta property="og:title" content="Getting Started with Terraform on Azure — A Practical Guide" />
+    <meta property="og:description" content="From project structure to state management to the gotchas nobody warns you about — a real-world Terraform on Azure walkthrough." />
+    <meta property="og:image" content="../images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="article" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog/terraform-azure.html" />
+    <title>Terraform on Azure Guide | Hello Fahid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="../index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn"><i class="fas fa-bars"></i></button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        <ul class="sidebar-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+          <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="section single-page blog-post" id="main-content">
+      <div class="section-center blog-post-container">
+
+        <a href="../blog.html" class="blog-back-link"><i class="fas fa-arrow-left"></i> All Posts</a>
+
+        <div class="blog-post-header">
+          <div class="blog-tags">
+            <span class="case-tag">Terraform</span>
+            <span class="case-tag">Azure</span>
+            <span class="case-tag">IaC</span>
+            <span class="case-tag">DevOps</span>
+          </div>
+          <h1>Getting Started with Terraform on Azure &mdash; A Practical Guide</h1>
+          <span class="blog-date"><i class="far fa-calendar-alt"></i> January 2026 &middot; 9 min read</span>
+        </div>
+
+        <p class="blog-intro">
+          Infrastructure as Code sounds great in theory. In practice, the learning curve can be steep. Here&#39;s a practical walkthrough of how I use Terraform to manage Azure resources &mdash; from project structure to state management to the gotchas nobody warns you about.
+        </p>
+
+        <h2>Why Terraform (Not Bicep or ARM)</h2>
+        <p>Azure has Bicep, and it&#39;s excellent if you&#39;re 100% Azure. I chose Terraform because:</p>
+        <ul>
+          <li>The team already knew HCL syntax from other projects</li>
+          <li>We needed to manage some non-Azure resources (Cloudflare DNS, GitHub repos)</li>
+          <li>The <code>terraform plan</code> output is clearer than ARM &ldquo;what-if&rdquo; for reviewing changes</li>
+          <li>State locking with Azure Storage backend prevents team conflicts</li>
+        </ul>
+
+        <h2>Project Structure</h2>
+        <pre><code>infra/
+├── environments/
+│   ├── staging/
+│   │   ├── main.tf          # Module calls with staging values
+│   │   ├── backend.tf       # Remote state config (Azure Storage)
+│   │   └── terraform.tfvars # Staging-specific variables
+│   └── production/
+│       ├── main.tf
+│       ├── backend.tf
+│       └── terraform.tfvars
+├── modules/
+│   ├── networking/
+│   │   ├── main.tf          # VNet, subnets, NSGs
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── compute/
+│   │   ├── main.tf          # VMs, scale sets
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── iot/
+│       ├── main.tf          # IoT Hub, DPS, storage
+│       ├── variables.tf
+│       └── outputs.tf
+└── README.md</code></pre>
+        <p>
+          The key pattern: <strong>modules</strong> define reusable infrastructure components, <strong>environments</strong> compose them with different parameters. This lets staging and production share the same infrastructure logic but differ in size, SKU, and networking rules.
+        </p>
+
+        <h2>Remote State with Azure Storage</h2>
+        <p>Storing Terraform state locally is fine for experiments, but for team work you need remote state with locking:</p>
+        <pre><code># backend.tf
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "stterraformstate"
+    container_name       = "tfstate"
+    key                  = "staging.tfstate"
+  }
+}</code></pre>
+        <p>
+          I provisioned the storage account <em>manually</em> (one-time bootstrap) and enabled blob versioning for state file history. This way, if a <code>terraform apply</code> corrupts state, we can revert to a previous version from Azure Storage.
+        </p>
+
+        <h2>A Real Module: IoT Hub</h2>
+        <pre><code># modules/iot/main.tf
+resource "azurerm_iothub" "main" {
+  name                = var.iot_hub_name
+  resource_group_name = var.resource_group_name
+  location            = var.location
+
+  sku {
+    name     = var.sku_name
+    capacity = var.sku_capacity
+  }
+
+  endpoint {
+    type              = "AzureIotHub.StorageContainer"
+    name              = "telemetry-archive"
+    connection_string = var.storage_connection_string
+    container_name    = "telemetry"
+    encoding          = "JSON"
+    batch_frequency   = 300
+    max_chunk_size    = 10485760
+  }
+
+  route {
+    name           = "telemetry-to-storage"
+    source         = "DeviceMessages"
+    condition      = "true"
+    endpoint_names = ["telemetry-archive"]
+    enabled        = true
+  }
+
+  tags = var.tags
+}
+
+# modules/iot/variables.tf
+variable "iot_hub_name" {
+  type        = string
+  description = "Name of the IoT Hub instance"
+}
+
+variable "sku_name" {
+  type    = string
+  default = "S1"
+}
+
+variable "sku_capacity" {
+  type    = number
+  default = 1
+}</code></pre>
+        <p>
+          The module creates an IoT Hub with a built-in route that archives all device messages to Azure Storage as JSON. In staging, we use <code>S1</code> with capacity 1; production uses <code>S2</code> with capacity 4.
+        </p>
+
+        <h2>CI/CD Integration</h2>
+        <p>We run Terraform through our Jenkins pipeline (see my <a href="jenkins-iot-pipeline.html">Jenkins post</a> for the full setup):</p>
+        <pre><code># Simplified CI flow
+terraform init
+terraform validate
+terraform plan -out=tfplan
+
+# Human reviews the plan output, then:
+terraform apply tfplan</code></pre>
+        <p>
+          The <code>-out=tfplan</code> flag is critical &mdash; it ensures the apply step executes exactly the plan that was reviewed, not whatever the current state happens to be when someone hits &ldquo;approve.&rdquo;
+        </p>
+
+        <h2>Gotchas &amp; Lessons</h2>
+        <ul>
+          <li><strong>State drift is real.</strong> Someone clicked in the Azure portal and changed an NSG rule. Next <code>terraform plan</code> showed a diff we didn&#39;t expect. Solution: periodic <code>terraform plan</code> runs in CI (even without apply) to catch drift early.</li>
+          <li><strong>Use <code>lifecycle { prevent_destroy = true }</code></strong> on databases and storage accounts. One wrong <code>terraform destroy</code> shouldn&#39;t wipe production data.</li>
+          <li><strong>Tag everything.</strong> We add <code>environment</code>, <code>project</code>, and <code>managed-by = "terraform"</code> tags to every resource. Makes Azure Cost Management reports actually useful and helps teammates know not to edit tagged resources manually.</li>
+          <li><strong>Start small.</strong> Don&#39;t try to Terraform your entire Azure subscription on day one. Start with one resource group, one service. Expand the module library as you gain confidence.</li>
+        </ul>
+
+      </div>
+    </article>
+
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+    <footer class="footer">
+      <ul class="social-icons">
+        <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+        <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+    <script src="../js/app.js"></script>
+  </body>
+</html>

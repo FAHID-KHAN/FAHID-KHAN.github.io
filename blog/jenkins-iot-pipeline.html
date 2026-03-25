@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How I designed a Jenkins CI/CD pipeline for an IoT platform with Robot Framework tests, Docker builds, and Ansible deployments." />
+    <meta property="og:title" content="Building a Jenkins CI/CD Pipeline for an IoT Platform" />
+    <meta property="og:description" content="A walkthrough of a Jenkins-based CI/CD system for Python packages, Docker images, Robot Framework tests, and multi-environment deployments." />
+    <meta property="og:image" content="../images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="article" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog/jenkins-iot-pipeline.html" />
+    <title>Jenkins CI/CD for IoT | Hello Fahid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="../index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn"><i class="fas fa-bars"></i></button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        <ul class="sidebar-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+          <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="section single-page blog-post" id="main-content">
+      <div class="section-center blog-post-container">
+
+        <a href="../blog.html" class="blog-back-link"><i class="fas fa-arrow-left"></i> All Posts</a>
+
+        <div class="blog-post-header">
+          <div class="blog-tags">
+            <span class="case-tag">Jenkins</span>
+            <span class="case-tag">Docker</span>
+            <span class="case-tag">CI/CD</span>
+            <span class="case-tag">Robot Framework</span>
+          </div>
+          <h1>Building a Jenkins CI/CD Pipeline for an IoT Platform</h1>
+          <span class="blog-date"><i class="far fa-calendar-alt"></i> February 2026 &middot; 10 min read</span>
+        </div>
+
+        <p class="blog-intro">
+          Shipping firmware and backend services for industrial IoT requires a different kind of pipeline. Here&#39;s how I designed a Jenkins-based CI/CD system that handles Python packages, Docker images, Robot Framework tests, and multi-environment deployments.
+        </p>
+
+        <h2>Why Jenkins (Not GitHub Actions)</h2>
+        <p>
+          Our IoT platform involves hardware-in-the-loop testing &mdash; some test stages need physical devices or VPN access to factory networks. Jenkins running on-premise gave us control over the execution environment that hosted CI services can&#39;t easily replicate. We also needed persistent build agents with specific tools pre-installed.
+        </p>
+
+        <h2>Pipeline Architecture</h2>
+        <pre><code>┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    Build     │────▶│    Test      │────▶│   Deploy     │
+│              │     │              │     │              │
+│ • Lint code  │     │ • Unit tests │     │ • Staging    │
+│ • Build pkg  │     │ • Robot FW   │     │ • Approval   │
+│ • Docker img │     │ • Integration│     │ • Production │
+└─────────────┘     └─────────────┘     └─────────────┘</code></pre>
+
+        <h2>The Jenkinsfile</h2>
+        <p>Here&#39;s a simplified version of our declarative pipeline:</p>
+        <pre><code>pipeline {
+    agent any
+
+    environment {
+        REGISTRY = "your-registry.azurecr.io"
+        IMAGE    = "iot-backend"
+    }
+
+    stages {
+        stage('Lint') {
+            steps {
+                sh 'pip install ruff'
+                sh 'ruff check src/'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'pip install -r requirements.txt'
+                sh 'pytest tests/unit/ --junitxml=report.xml'
+            }
+            post {
+                always { junit 'report.xml' }
+            }
+        }
+
+        stage('Robot Framework') {
+            steps {
+                sh '''
+                    robot --outputdir results/ \
+                          --variable ENV:staging \
+                          tests/robot/
+                '''
+            }
+            post {
+                always {
+                    robot outputPath: 'results/',
+                          passThreshold: 95.0
+                }
+            }
+        }
+
+        stage('Build &amp; Push Image') {
+            steps {
+                script {
+                    def tag = "${env.BUILD_NUMBER}"
+                    sh """
+                        docker build -t ${REGISTRY}/${IMAGE}:${tag} .
+                        docker push ${REGISTRY}/${IMAGE}:${tag}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                sh '''
+                    ansible-playbook deploy.yml \
+                        -i inventory/staging.yml \
+                        -e "image_tag=${BUILD_NUMBER}"
+                '''
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                input message: 'Deploy to production?',
+                      ok: 'Deploy'
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                sh '''
+                    ansible-playbook deploy.yml \
+                        -i inventory/production.yml \
+                        -e "image_tag=${BUILD_NUMBER}"
+                '''
+            }
+        }
+    }
+
+    post {
+        failure {
+            sh '''
+                curl -X POST "$SLACK_WEBHOOK" \
+                     -H "Content-Type: application/json" \
+                     -d '{"text":"Build #${BUILD_NUMBER} failed"}'
+            '''
+        }
+    }
+}</code></pre>
+
+        <h2>Robot Framework Integration</h2>
+        <p>
+          The Robot Framework stage runs end-to-end tests that exercise the full platform &mdash; API calls, MQTT message flows, and database state verification. We wrote custom Python libraries to abstract complex test operations:
+        </p>
+        <pre><code># libraries/IoTPlatformLibrary.py
+class IoTPlatformLibrary:
+    def publish_telemetry(self, device_id, metric, value):
+        """Publish a message to the MQTT broker and
+           verify it arrives in the database."""
+        ...
+
+    def device_should_be_online(self, device_id):
+        """Check the device status API."""
+        ...
+
+# tests/robot/smoke_test.robot
+*** Settings ***
+Library    IoTPlatformLibrary
+
+*** Test Cases ***
+Telemetry End-to-End
+    Publish Telemetry    sensor-01    temperature    23.5
+    Sleep    2s
+    ${value}=    Get Latest Value    sensor-01    temperature
+    Should Be Equal As Numbers    ${value}    23.5</code></pre>
+
+        <h2>Key Takeaways</h2>
+        <ul>
+          <li><strong>Pin your dependencies.</strong> We hit a production issue because <code>pip install</code> pulled a newer minor version of a library that changed behaviour. Now everything is pinned in <code>requirements.txt</code> with exact versions.</li>
+          <li><strong>Fail fast.</strong> Lint and unit tests run first. If code style or basic logic is broken, the pipeline stops immediately &mdash; don&#39;t waste 20 minutes on integration tests for code that won&#39;t pass linting.</li>
+          <li><strong>Manual approval gates work.</strong> For IoT, automated production deploys are risky. A simple <code>input</code> step lets a team lead review staging metrics before promoting to production. Low-tech, high-value.</li>
+          <li><strong>Ansible over shell scripts for deployment.</strong> Our early pipelines used raw SSH commands. Ansible playbooks are idempotent, testable, and self-documenting &mdash; much safer for production.</li>
+        </ul>
+
+      </div>
+    </article>
+
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+    <footer class="footer">
+      <ul class="social-icons">
+        <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+        <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+    <script src="../js/app.js"></script>
+  </body>
+</html>

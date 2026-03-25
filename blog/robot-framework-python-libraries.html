@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How to build custom Robot Framework libraries in Python for testing IoT APIs, MQTT brokers, and hardware-in-the-loop setups." />
+    <meta property="og:title" content="Writing Custom Robot Framework Libraries in Python" />
+    <meta property="og:description" content="Go beyond built-in keywords — build Python libraries for Robot Framework to test MQTT, REST APIs, and device protocols." />
+    <meta property="og:image" content="../images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="article" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog/robot-framework-python-libraries.html" />
+    <title>Custom Robot Framework Libraries | Hello Fahid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="../index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn"><i class="fas fa-bars"></i></button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        <ul class="sidebar-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+          <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="section single-page blog-post" id="main-content">
+      <div class="section-center blog-post-container">
+
+        <a href="../blog.html" class="blog-back-link"><i class="fas fa-arrow-left"></i> All Posts</a>
+
+        <div class="blog-post-header">
+          <div class="blog-tags">
+            <span class="case-tag">Robot Framework</span>
+            <span class="case-tag">Python</span>
+            <span class="case-tag">Testing</span>
+            <span class="case-tag">IoT</span>
+          </div>
+          <h1>Writing Custom Robot Framework Libraries in Python</h1>
+          <span class="blog-date"><i class="far fa-calendar-alt"></i> October 2025 &middot; 8 min read</span>
+        </div>
+
+        <p class="blog-intro">
+          Robot Framework&#39;s built-in keywords cover a lot. But when you&#39;re testing MQTT message flows, custom device protocols, or hardware-in-the-loop setups, you need your own libraries. Here&#39;s how I build them.
+        </p>
+
+        <h2>Why Custom Libraries?</h2>
+        <p>Built-in and community libraries handle HTTP requests, browser automation, and SSH. But IoT testing has specific needs:</p>
+        <ul>
+          <li>Publishing and subscribing to MQTT topics with QoS guarantees</li>
+          <li>Validating JSON payloads against device schemas</li>
+          <li>Waiting for asynchronous events with configurable timeouts</li>
+          <li>Interacting with hardware simulators over serial or TCP</li>
+        </ul>
+        <p>A custom Python library wraps all of this behind clean Robot Framework keywords that test engineers can use without knowing the implementation details.</p>
+
+        <h2>Library Structure</h2>
+        <p>Robot Framework discovers Python libraries by class name. The simplest structure:</p>
+        <pre><code>tests/
+├── libraries/
+│   ├── MqttTestLibrary.py
+│   ├── DeviceSimulator.py
+│   └── PayloadValidator.py
+├── resources/
+│   └── common.resource
+└── suites/
+    ├── mqtt_integration.robot
+    └── device_api.robot</code></pre>
+
+        <h2>Building an MQTT Test Library</h2>
+        <p>Here&#39;s a real-world MQTT library I use for integration tests:</p>
+        <pre><code>import paho.mqtt.client as mqtt
+import json
+import threading
+import time
+
+
+class MqttTestLibrary:
+    """Robot Framework library for MQTT integration testing."""
+
+    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
+
+    def __init__(self, broker="localhost", port=1883):
+        self._broker = broker
+        self._port = int(port)
+        self._client = None
+        self._messages = {}
+        self._lock = threading.Lock()
+
+    def connect_to_broker(self, client_id="rf-test"):
+        """Connect to the MQTT broker."""
+        self._client = mqtt.Client(client_id=client_id)
+        self._client.on_message = self._on_message
+        self._client.connect(self._broker, self._port)
+        self._client.loop_start()
+
+    def disconnect_from_broker(self):
+        """Disconnect and stop the network loop."""
+        if self._client:
+            self._client.loop_stop()
+            self._client.disconnect()
+
+    def subscribe_to_topic(self, topic, qos=1):
+        """Subscribe to an MQTT topic."""
+        self._client.subscribe(topic, qos=int(qos))
+
+    def publish_message(self, topic, payload, qos=1):
+        """Publish a JSON payload to a topic."""
+        if isinstance(payload, dict):
+            payload = json.dumps(payload)
+        self._client.publish(topic, payload, qos=int(qos))
+
+    def wait_for_message(self, topic, timeout=10):
+        """Wait for a message on a topic. Returns the payload."""
+        deadline = time.time() + float(timeout)
+        while time.time() &lt; deadline:
+            with self._lock:
+                if topic in self._messages:
+                    return self._messages.pop(topic)
+            time.sleep(0.1)
+        raise AssertionError(
+            f"No message received on '{topic}' within {timeout}s"
+        )
+
+    def message_payload_should_contain(self, payload, key, expected):
+        """Assert a key in the JSON payload matches expected value."""
+        data = json.loads(payload) if isinstance(payload, str) else payload
+        actual = data.get(key)
+        if str(actual) != str(expected):
+            raise AssertionError(
+                f"Expected '{key}' to be '{expected}', got '{actual}'"
+            )
+
+    def _on_message(self, client, userdata, msg):
+        with self._lock:
+            self._messages[msg.topic] = msg.payload.decode("utf-8")</code></pre>
+
+        <h2>Using It in a Test Suite</h2>
+        <pre><code>*** Settings ***
+Library    ../libraries/MqttTestLibrary.py    broker=mqtt.staging.local    port=1883
+Suite Setup    Connect To Broker    client_id=integration-test
+Suite Teardown    Disconnect From Broker
+
+*** Test Cases ***
+Device Should Publish Telemetry After Command
+    [Documentation]    Send a command and verify the device responds with telemetry.
+    Subscribe To Topic    devices/sensor-001/telemetry
+    Publish Message    devices/sensor-001/commands    {"action": "read_sensors"}
+    ${msg}=    Wait For Message    devices/sensor-001/telemetry    timeout=15
+    Message Payload Should Contain    ${msg}    temperature    key_exists=true
+    Message Payload Should Contain    ${msg}    device_id    sensor-001
+
+Broker Should Retain Last Will Message
+    [Documentation]    Verify the broker publishes LWT when a client disconnects unexpectedly.
+    Subscribe To Topic    devices/sensor-001/status
+    # Simulate ungraceful disconnect in another test fixture
+    ${msg}=    Wait For Message    devices/sensor-001/status    timeout=20
+    Message Payload Should Contain    ${msg}    status    offline</code></pre>
+
+        <h2>Library Scope Matters</h2>
+        <p>The <code>ROBOT_LIBRARY_SCOPE</code> class attribute controls instance lifecycle:</p>
+        <ul>
+          <li><strong>TEST CASE</strong> &mdash; new instance per test. Completely isolated but expensive for connection-heavy libraries.</li>
+          <li><strong>TEST SUITE</strong> &mdash; one instance per suite file. Good balance for database or MQTT connections that are expensive to create.</li>
+          <li><strong>GLOBAL</strong> &mdash; single instance for the entire run. Use sparingly &mdash; shared state between suites causes flaky tests.</li>
+        </ul>
+        <p>For MQTT testing, <code>TEST SUITE</code> scope is ideal: one connection per suite, clean state between suites.</p>
+
+        <h2>Adding a Payload Validator</h2>
+        <pre><code>import json
+import jsonschema
+
+
+class PayloadValidator:
+    """Validate MQTT/API payloads against JSON schemas."""
+
+    ROBOT_LIBRARY_SCOPE = "GLOBAL"
+
+    def __init__(self):
+        self._schemas = {}
+
+    def load_schema(self, name, schema_path):
+        """Load a JSON schema from file."""
+        with open(schema_path) as f:
+            self._schemas[name] = json.load(f)
+
+    def payload_should_match_schema(self, payload, schema_name):
+        """Validate payload against a named schema."""
+        data = json.loads(payload) if isinstance(payload, str) else payload
+        schema = self._schemas.get(schema_name)
+        if not schema:
+            raise AssertionError(f"Schema '{schema_name}' not loaded")
+        try:
+            jsonschema.validate(data, schema)
+        except jsonschema.ValidationError as e:
+            raise AssertionError(
+                f"Payload does not match schema '{schema_name}': {e.message}"
+            )</code></pre>
+
+        <h2>Lessons Learned</h2>
+        <ul>
+          <li><strong>Name methods with underscores.</strong> Robot Framework converts <code>wait_for_message</code> to <code>Wait For Message</code> automatically. Keep Python naming conventions.</li>
+          <li><strong>Use threading locks for async callbacks.</strong> MQTT&#39;s <code>on_message</code> runs on a background thread. Without locks, you get race conditions in message retrieval.</li>
+          <li><strong>Raise <code>AssertionError</code> for failures.</strong> Robot Framework uses this specific exception type to mark tests as failed. Any other exception type marks the test as errored instead.</li>
+          <li><strong>Document keyword arguments.</strong> Robot Framework generates keyword documentation from docstrings. Well-documented libraries save your team hours of guesswork.</li>
+        </ul>
+
+      </div>
+    </article>
+
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+    <footer class="footer">
+      <ul class="social-icons">
+        <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+        <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+    <script src="../js/app.js"></script>
+  </body>
+</html>

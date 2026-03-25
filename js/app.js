@@ -53,3 +53,18 @@ if (fadeElements.length > 0) {
     observer.observe(el);
   });
 }
+
+// Back to top button
+const backToTop = document.querySelector(".back-to-top");
+if (backToTop) {
+  window.addEventListener("scroll", function () {
+    if (window.pageYOffset > 400) {
+      backToTop.classList.add("visible");
+    } else {
+      backToTop.classList.remove("visible");
+    }
+  });
+  backToTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}

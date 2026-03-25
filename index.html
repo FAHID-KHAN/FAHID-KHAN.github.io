@@ -3,17 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Fahid A. Khan &mdash; Software Design Engineer specializing in Backend Development, Cloud Infrastructure, DevOps &amp; AI Automation. Based in Tampere, Finland." />
+    <meta name="description" content="Fahid A. Khan &mdash; Software Engineer specializing in cloud infrastructure, DevOps, and CI/CD pipelines. Based in Tampere, Finland." />
     <meta property="og:title" content="Hello Fahid | Backend &middot; Cloud &middot; DevOps" />
-    <meta property="og:description" content="Software Design Engineer specializing in Backend Development, Cloud Infrastructure, DevOps &amp; CI/CD. Based in Tampere, Finland." />
+    <meta property="og:description" content="Software Engineer specializing in cloud infrastructure, DevOps pipelines, and scalable backend systems. Based in Tampere, Finland." />
     <meta property="og:image" content="./images/2025_TREON_017_FAHID-KHAN.jpg" />
     <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://fahid-khan.github.io/" />
     <title>Hello Fahid | Backend &middot; Cloud &middot; DevOps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./fontawesome-free-5.12.1-web/css/all.min.css" />
     <link rel="stylesheet" href="./css/styles.css" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Fahid A. Khan",
+      "url": "https://fahid-khan.github.io",
+      "jobTitle": "Software Engineer",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Treon"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Tampere",
+        "addressCountry": "FI"
+      },
+      "sameAs": [
+        "https://www.linkedin.com/in/fahid-a-khan-46758819b/",
+        "https://github.com/FAHID-KHAN"
+      ],
+      "knowsAbout": ["Backend Development", "Cloud Infrastructure", "DevOps", "CI/CD", "Python", "Azure", "Docker", "Jenkins"]
+    }
+    </script>
   </head>
   <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
     <!-- navbar -->
     <nav class="nav" id="nav">
       <div class="nav-center">
@@ -27,6 +54,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
@@ -42,6 +70,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
         <ul class="social-icons">
@@ -60,12 +89,12 @@
     </aside>
 
     <!-- hero -->
-    <header class="hero">
+    <header class="hero" id="main-content">
       <div class="hero-center">
         <article class="hero-info">
-          <span class="hero-greeting">// Software Design Engineer</span>
+          <span class="hero-greeting">// Software Engineer</span>
           <h1>Fahid A. <span class="gradient-text">Khan</span></h1>
-          <h4>Backend Development &bull; Cloud Infrastructure &bull; DevOps &amp; CI/CD &bull; AI Automation</h4>
+          <h4>Backend Systems &bull; Cloud Infrastructure &bull; DevOps &amp; CI/CD</h4>
           <div class="hero-btns">
             <a href="projects.html" class="btn">View Services</a>
             <a href="contact.html" class="btn btn-outline">Let&#39;s Talk</a>
@@ -115,9 +144,9 @@
     <!-- services preview -->
     <section class="section bg-dark fade-in">
       <div class="section-title">
-        <h2>What I Offer</h2>
+        <h2>What I Do</h2>
         <div class="underline"></div>
-        <p class="section-subtitle">Engineering solutions for scalable systems, reliable pipelines, and intelligent automation</p>
+        <p class="section-subtitle">Three things, done well &mdash; backend systems, cloud infrastructure, and DevOps pipelines</p>
       </div>
       <div class="services-center section-center">
         <article class="service">
@@ -125,25 +154,27 @@
           <h4>Backend Development</h4>
           <div class="underline"></div>
           <p>
-            Designing and building robust server-side applications, RESTful APIs, and microservices with Python and Node.js. Focus on performance, security, and clean architecture.
+            Building robust APIs, server-side services, and platform software with Python and Node.js. Clean architecture, reliable performance, and production-ready code.
           </p>
           <div class="service-tags">
             <span class="service-tag">Python</span>
-            <span class="service-tag">Node.js</span>
-            <span class="service-tag">REST APIs</span>
+            <span class="service-tag">FastAPI</span>
+            <span class="service-tag">SQL</span>
+            <span class="service-tag">Redis</span>
           </div>
         </article>
         <article class="service">
           <i class="fas fa-cloud service-icon"></i>
-          <h4>Cloud &amp; Infrastructure</h4>
+          <h4>Cloud Infrastructure</h4>
           <div class="underline"></div>
           <p>
-            Building cloud-native solutions on Azure and AWS. Infrastructure provisioning, IoT platform integration, and scalable architecture design for production workloads.
+            Designing and managing cloud environments on Azure &mdash; from IoT Hub integrations and Terraform-managed infrastructure to MQTT messaging and real-time monitoring.
           </p>
           <div class="service-tags">
             <span class="service-tag">Azure</span>
-            <span class="service-tag">AWS</span>
-            <span class="service-tag">IoT Hub</span>
+            <span class="service-tag">Terraform</span>
+            <span class="service-tag">MQTT</span>
+            <span class="service-tag">Grafana</span>
           </div>
         </article>
         <article class="service">
@@ -151,51 +182,13 @@
           <h4>DevOps &amp; CI/CD</h4>
           <div class="underline"></div>
           <p>
-            End-to-end pipeline design with Jenkins, Docker, and Ansible. Container orchestration, server health monitoring, and automated deployment workflows for continuous delivery.
+            End-to-end pipeline design with Jenkins, Docker, and Ansible. Automated testing, Bash scripting, infrastructure as code, and deployment automation across Linux environments.
           </p>
           <div class="service-tags">
             <span class="service-tag">Jenkins</span>
             <span class="service-tag">Docker</span>
             <span class="service-tag">Ansible</span>
-          </div>
-        </article>
-        <article class="service">
-          <i class="fas fa-robot service-icon"></i>
-          <h4>AI &amp; Automation</h4>
-          <div class="underline"></div>
-          <p>
-            Python scripting, AI-assisted tooling, and custom automation to streamline workflows, data processing, and infrastructure tasks. Reducing manual work with intelligent solutions.
-          </p>
-          <div class="service-tags">
-            <span class="service-tag">Python</span>
-            <span class="service-tag">AI Automation</span>
-            <span class="service-tag">LLM Integration</span>
-          </div>
-        </article>
-        <article class="service">
-          <i class="fas fa-cogs service-icon"></i>
-          <h4>Platform Engineering</h4>
-          <div class="underline"></div>
-          <p>
-            Large-scale software design for platform development, industrial IoT integration, and system architecture. Building internal tools and packages that accelerate development teams.
-          </p>
-          <div class="service-tags">
-            <span class="service-tag">IoT</span>
-            <span class="service-tag">Linux</span>
-            <span class="service-tag">System Design</span>
-          </div>
-        </article>
-        <article class="service">
-          <i class="fas fa-vial service-icon"></i>
-          <h4>Testing &amp; QA</h4>
-          <div class="underline"></div>
-          <p>
-            Automated testing strategies using Robot Framework, unit testing, and integration testing. Building custom test libraries and ensuring software quality at every stage.
-          </p>
-          <div class="service-tags">
-            <span class="service-tag">Robot Framework</span>
-            <span class="service-tag">Jest</span>
-            <span class="service-tag">CI Testing</span>
+            <span class="service-tag">Nginx</span>
           </div>
         </article>
       </div>
@@ -246,14 +239,25 @@
       </div>
       <div class="section-center skills-center">
         <article>
-          <h3>Languages</h3>
+          <h3>Languages &amp; Backend</h3>
           <div class="skill-list">
             <span class="skill-tag">Python</span>
-            <span class="skill-tag">JavaScript</span>
-            <span class="skill-tag">TypeScript</span>
-            <span class="skill-tag">C++</span>
-            <span class="skill-tag">Java</span>
-            <span class="skill-tag">Shell / Bash</span>
+            <span class="skill-tag">FastAPI</span>
+            <span class="skill-tag">Node.js</span>
+            <span class="skill-tag">SQL</span>
+            <span class="skill-tag">PostgreSQL</span>
+            <span class="skill-tag">Redis</span>
+          </div>
+        </article>
+        <article>
+          <h3>Cloud Infrastructure</h3>
+          <div class="skill-list">
+            <span class="skill-tag">Azure (AZ-400)</span>
+            <span class="skill-tag">Azure IoT Hub</span>
+            <span class="skill-tag">MQTT / Mosquitto</span>
+            <span class="skill-tag">Terraform</span>
+            <span class="skill-tag">Grafana</span>
+            <span class="skill-tag">Linux Systems</span>
           </div>
         </article>
         <article>
@@ -261,53 +265,23 @@
           <div class="skill-list">
             <span class="skill-tag">Jenkins</span>
             <span class="skill-tag">Docker</span>
+            <span class="skill-tag">Docker Compose</span>
             <span class="skill-tag">Ansible</span>
+            <span class="skill-tag">Nginx</span>
+            <span class="skill-tag">Bash / YAML</span>
             <span class="skill-tag">Git / GitHub</span>
-            <span class="skill-tag">CI/CD Pipelines</span>
-            <span class="skill-tag">Grafana</span>
-          </div>
-        </article>
-        <article>
-          <h3>Cloud &amp; Infrastructure</h3>
-          <div class="skill-list">
-            <span class="skill-tag">Azure (AZ-400)</span>
-            <span class="skill-tag">Azure IoT Hub</span>
-            <span class="skill-tag">AWS</span>
-            <span class="skill-tag">Linux Systems</span>
-            <span class="skill-tag">Raspberry Pi</span>
-            <span class="skill-tag">Networking</span>
-          </div>
-        </article>
-        <article>
-          <h3>Backend &amp; APIs</h3>
-          <div class="skill-list">
-            <span class="skill-tag">Node.js</span>
-            <span class="skill-tag">Express.js</span>
-            <span class="skill-tag">REST APIs</span>
-            <span class="skill-tag">MongoDB</span>
-            <span class="skill-tag">Firebase</span>
-            <span class="skill-tag">Microservices</span>
-          </div>
-        </article>
-        <article>
-          <h3>Testing &amp; QA</h3>
-          <div class="skill-list">
             <span class="skill-tag">Robot Framework</span>
-            <span class="skill-tag">Jest</span>
-            <span class="skill-tag">Unit Testing</span>
-            <span class="skill-tag">Integration Testing</span>
-            <span class="skill-tag">Test Automation</span>
           </div>
         </article>
         <article>
-          <h3>AI &amp; Automation</h3>
+          <h3>Workflow &amp; Soft Skills</h3>
           <div class="skill-list">
-            <span class="skill-tag">AI Automation</span>
-            <span class="skill-tag">LLM Integration</span>
-            <span class="skill-tag">Python Scripting</span>
-            <span class="skill-tag">Process Automation</span>
-            <span class="skill-tag">Prompt Engineering</span>
+            <span class="skill-tag">Technical Documentation</span>
+            <span class="skill-tag">Cross-Team Communication</span>
             <span class="skill-tag">Agile / Scrum</span>
+            <span class="skill-tag">Code Reviews</span>
+            <span class="skill-tag">Problem Solving</span>
+            <span class="skill-tag">Jira</span>
           </div>
         </article>
       </div>
@@ -355,11 +329,14 @@
           <div class="underline"></div>
         </div>
         <p class="video-text">
-          Need a backend system, cloud infrastructure, or CI/CD pipeline? I help businesses ship reliable software faster.
+          Need a backend system, Azure cloud setup, or CI/CD pipeline? I help teams ship reliable software faster.
         </p>
         <a href="contact.html" class="btn">Start a Conversation</a>
       </div>
     </section>
+
+    <!-- back to top -->
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
 
     <!-- footer -->
     <footer class="footer">

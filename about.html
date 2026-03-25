@@ -8,12 +8,16 @@
     <meta property="og:description" content="Software Design Engineer specializing in Backend Development, Cloud Infrastructure, DevOps &amp; CI/CD. Based in Tampere, Finland." />
     <meta property="og:image" content="./images/2025_TREON_017_FAHID-KHAN.jpg" />
     <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://fahid-khan.github.io/about.html" />
     <title>Hello Fahid | About</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./fontawesome-free-5.12.1-web/css/all.min.css" />
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
     <!-- navbar -->
     <nav class="nav" id="nav">
       <div class="nav-center">
@@ -27,6 +31,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
       </div>
@@ -42,6 +47,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
         <ul class="social-icons">
@@ -59,25 +65,78 @@
       </div>
     </aside>
 
-    <!-- about content -->
-    <section class="section single-page">
+    <!-- about intro -->
+    <section class="section single-page" id="main-content">
       <div class="section-title">
         <h1>About Me</h1>
         <div class="underline"></div>
       </div>
       <div class="section-center page-info">
         <p>
-          I&#39;m Fahid A. Khan, a Software Design Engineer at <a href="https://treon.fi" target="_blank" rel="noopener noreferrer">Treon</a> in Tampere, Finland, where I&#39;ve been building platform software and backend systems for industrial IoT since 2021. I specialize in backend development, cloud infrastructure, DevOps, and intelligent automation.
+          Hey &mdash; I&#39;m Fahid. I build backend systems, wrangle cloud infrastructure, and automate everything that shouldn&#39;t be done twice. Based in Tampere, Finland, where the winters are long and the coffee consumption is... professional-grade.
         </p>
         <p>
-          With a Master&#39;s degree in Software, Web &amp; Cloud Engineering and a Bachelor&#39;s in Computer Software Engineering &mdash; both from Tampere University &mdash; I bring a strong theoretical foundation paired with 4+ years of hands-on industry experience. I&#39;m passionate about solving real-world problems through clean architecture, reliable pipelines, and automation.
+          I&#39;ve spent the last 4+ years working on industrial IoT platforms &mdash; the kind where thousands of sensors are yelling data at your servers 24/7 and your job is to make sure nothing catches fire (figuratively, mostly). My days involve writing Python, staring at Jenkins logs, and occasionally having calm conversations with Terraform about why it wants to destroy a production database.
         </p>
         <p>
-          At Treon, I work across the full platform stack: building Python tools for testing and integration, managing CI/CD pipelines with Jenkins, automating infrastructure with Docker and Ansible, and integrating with Azure IoT Hub. I use Grafana for monitoring, shell scripts for system automation, and Robot Framework for comprehensive test coverage across Linux environments.
+          I got into this through a Master&#39;s in Software, Web &amp; Cloud Engineering and a Bachelor&#39;s in Computer Software Engineering, both from Tampere University. Somewhere along the way I also picked up an Azure DevOps certification (AZ-400) because apparently I enjoy exams. The degrees gave me the theory; the real education was the first time a deployment went sideways at 4 PM on a Friday.
         </p>
         <p>
-          I consider myself a problem solver first and a specialist second. I prefer learning by doing and believe in building software that is maintainable, observable, and secure. Whether it&#39;s designing a new microservice, setting up a deployment pipeline, or automating a repetitive business process with AI, I focus on delivering value efficiently.
+          My approach is simple: if I have to do something more than twice, I automate it. If it can break silently, I add monitoring. If the documentation doesn&#39;t exist, I write it (and then forget where I saved it &mdash; I&#39;m working on that part). I care about code that&#39;s readable six months later, pipelines that don&#39;t need babysitting, and infrastructure you can actually reason about.
         </p>
+      </div>
+    </section>
+
+    <!-- what I do — 3 pillars -->
+    <section class="section bg-dark fade-in">
+      <div class="section-title">
+        <h2>What I Specialise In</h2>
+        <div class="underline"></div>
+      </div>
+      <div class="services-center section-center">
+        <article class="service">
+          <i class="fas fa-server service-icon"></i>
+          <h4>Backend Development</h4>
+          <div class="underline"></div>
+          <p>
+            Python-first backend work &mdash; APIs with FastAPI, platform tooling, database design with PostgreSQL, caching with Redis, and integration with MQTT-based IoT data pipelines.
+          </p>
+          <div class="service-tags">
+            <span class="service-tag">Python</span>
+            <span class="service-tag">FastAPI</span>
+            <span class="service-tag">PostgreSQL</span>
+            <span class="service-tag">Redis</span>
+            <span class="service-tag">MQTT</span>
+          </div>
+        </article>
+        <article class="service">
+          <i class="fas fa-cloud service-icon"></i>
+          <h4>Cloud Infrastructure</h4>
+          <div class="underline"></div>
+          <p>
+            Designing and managing Azure environments &mdash; IoT Hub, Terraform-managed resources, remote state with locking, monitoring with Grafana, and infrastructure that scales with demand.
+          </p>
+          <div class="service-tags">
+            <span class="service-tag">Azure</span>
+            <span class="service-tag">Terraform</span>
+            <span class="service-tag">IoT Hub</span>
+            <span class="service-tag">Grafana</span>
+          </div>
+        </article>
+        <article class="service">
+          <i class="fas fa-infinity service-icon"></i>
+          <h4>DevOps &amp; CI/CD</h4>
+          <div class="underline"></div>
+          <p>
+            End-to-end pipeline design with Jenkins, containerisation with Docker, server automation with Ansible, and comprehensive test coverage using Robot Framework across Linux environments.
+          </p>
+          <div class="service-tags">
+            <span class="service-tag">Jenkins</span>
+            <span class="service-tag">Docker</span>
+            <span class="service-tag">Ansible</span>
+            <span class="service-tag">Robot Framework</span>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -165,6 +224,9 @@
         </div>
       </div>
     </section>
+
+    <!-- back to top -->
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
 
     <!-- footer -->
     <footer class="footer">

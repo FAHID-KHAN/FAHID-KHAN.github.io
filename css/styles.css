@@ -1508,6 +1508,258 @@ Contact Form
 
 /*
 =============== 
+Blog Page
+===============
+*/
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.blog-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+
+.blog-card-link:hover .blog-card {
+  border-color: var(--accent-1);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-4px);
+}
+
+.blog-card-link:hover .blog-read-more {
+  color: var(--accent-1);
+  gap: 0.6rem;
+}
+
+.blog-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+}
+
+.blog-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.blog-date {
+  font-family: var(--ff-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.blog-date i {
+  margin-right: 0.3rem;
+}
+
+.blog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.blog-card h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.blog-excerpt {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.blog-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--ff-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+@media screen and (max-width: 600px) {
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+  .blog-card {
+    padding: 1.5rem;
+  }
+  .blog-card h2 {
+    font-size: 1.1rem;
+  }
+}
+
+/*
+=============== 
+Blog Post (Individual)
+===============
+*/
+.blog-post-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.blog-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ff-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: var(--transition);
+}
+
+.blog-back-link:hover {
+  color: var(--accent-1);
+}
+
+.blog-post-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.blog-post-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0.75rem 0;
+  letter-spacing: -0.02em;
+}
+
+.blog-post-header .blog-date {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.blog-post .blog-intro {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.blog-post h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--accent-3);
+}
+
+.blog-post h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--accent-3);
+}
+
+.blog-post p {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+.blog-post ul {
+  margin-bottom: 1rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.blog-post ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.blog-post ul li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  color: var(--accent-1);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.blog-post pre {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.blog-post code {
+  font-family: var(--ff-mono);
+  font-size: 0.85rem;
+  color: var(--accent-3);
+  line-height: 1.6;
+}
+
+.blog-post p code {
+  background: var(--bg-primary);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.blog-post a {
+  color: var(--accent-1);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.blog-post a:hover {
+  border-bottom-color: var(--accent-1);
+}
+
+@media screen and (max-width: 600px) {
+  .blog-post-header h1 {
+    font-size: 1.5rem;
+  }
+  .blog-post pre {
+    padding: 1rem;
+  }
+  .blog-post code {
+    font-size: 0.78rem;
+  }
+}
+
+/*
+=============== 
 Resume Page
 ===============
 */
@@ -1716,4 +1968,65 @@ Resume Page
   .resume-cert-list li::before {
     color: #0e7490;
   }
+}
+
+/*
+=============== 
+Skip to Content (Accessibility)
+===============
+*/
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-1);
+  color: var(--bg-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-weight: 600;
+  z-index: 1000;
+  transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/*
+=============== 
+Back to Top Button
+===============
+*/
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--accent-1);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+  z-index: 99;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top:hover {
+  background: var(--accent-1);
+  color: var(--bg-primary);
+  border-color: var(--accent-1);
+  transform: translateY(-3px);
 }

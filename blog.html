@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Technical blog by Fahid A. Khan - Tutorials on MQTT, Grafana, Jenkins CI/CD, Terraform, Azure, and DevOps." />
+    <meta property="og:title" content="Hello Fahid | Blog" />
+    <meta property="og:description" content="Technical tutorials and engineering insights on DevOps, Cloud Infrastructure, and Backend Development." />
+    <meta property="og:image" content="./images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog.html" />
+    <title>Hello Fahid | Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <!-- navbar -->
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+        <ul class="sidebar-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Services</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li>
+            <a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub">
+              <i class="fab fa-github"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- blog hero -->
+    <div class="services-hero" id="main-content">
+      <div class="section-title">
+        <h1>Blog</h1>
+        <div class="underline"></div>
+        <p style="max-width: 600px; margin: 1rem auto 0; color: var(--text-secondary);">
+          Technical tutorials and engineering notes from real-world projects &mdash; IoT platforms, CI/CD pipelines, and cloud infrastructure.
+        </p>
+      </div>
+    </div>
+
+    <!-- blog cards -->
+    <section class="section">
+      <div class="section-center blog-grid">
+
+        <!-- Card 1 -->
+        <a href="blog/mqtt-grafana.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> March 2026</span>
+              <div class="blog-tags">
+                <span class="case-tag">MQTT</span>
+                <span class="case-tag">Grafana</span>
+                <span class="case-tag">IoT</span>
+              </div>
+            </div>
+            <h2>How I Set Up MQTT with Grafana for Real-Time IoT Monitoring</h2>
+            <p class="blog-excerpt">Connecting Mosquitto to Grafana through a Python pipeline &mdash; with PostgreSQL in between &mdash; to visualise thousands of industrial sensor readings in real time.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+        <!-- Card 2 -->
+        <a href="blog/jenkins-iot-pipeline.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> February 2026</span>
+              <div class="blog-tags">
+                <span class="case-tag">Jenkins</span>
+                <span class="case-tag">CI/CD</span>
+                <span class="case-tag">Docker</span>
+              </div>
+            </div>
+            <h2>Building a Jenkins CI/CD Pipeline for an IoT Platform</h2>
+            <p class="blog-excerpt">A declarative Jenkins pipeline with lint, unit tests, Robot Framework integration testing, Docker builds, and gated multi-environment deployments.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+        <!-- Card 3 -->
+        <a href="blog/terraform-azure.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> January 2026</span>
+              <div class="blog-tags">
+                <span class="case-tag">Terraform</span>
+                <span class="case-tag">Azure</span>
+                <span class="case-tag">IaC</span>
+              </div>
+            </div>
+            <h2>Getting Started with Terraform on Azure &mdash; A Practical Guide</h2>
+            <p class="blog-excerpt">Project structure, remote state with Azure Storage, reusable modules for IoT Hub, CI/CD integration, and the gotchas nobody warns you about.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+        <!-- Card 4 -->
+        <a href="blog/docker-compose-fastapi.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> December 2025</span>
+              <div class="blog-tags">
+                <span class="case-tag">Docker</span>
+                <span class="case-tag">FastAPI</span>
+                <span class="case-tag">Nginx</span>
+              </div>
+            </div>
+            <h2>Dockerising a FastAPI App with Compose, Nginx &amp; Redis</h2>
+            <p class="blog-excerpt">Multi-stage Dockerfile, Docker Compose with health checks, Nginx reverse proxy, and Redis caching &mdash; the production setup I use for most FastAPI projects.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+        <!-- Card 5 -->
+        <a href="blog/ansible-server-automation.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> November 2025</span>
+              <div class="blog-tags">
+                <span class="case-tag">Ansible</span>
+                <span class="case-tag">Linux</span>
+                <span class="case-tag">DevOps</span>
+              </div>
+            </div>
+            <h2>Automating Server Setup with Ansible Playbooks</h2>
+            <p class="blog-excerpt">From shell scripts to idempotent playbooks &mdash; provisioning Ubuntu servers, deploying Docker apps with Jinja2 templates, and managing secrets with Ansible Vault.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+        <!-- Card 6 -->
+        <a href="blog/robot-framework-python-libraries.html" class="blog-card-link fade-in">
+          <article class="blog-card">
+            <div class="blog-card-header">
+              <span class="blog-date"><i class="far fa-calendar-alt"></i> October 2025</span>
+              <div class="blog-tags">
+                <span class="case-tag">Robot Framework</span>
+                <span class="case-tag">Python</span>
+                <span class="case-tag">Testing</span>
+              </div>
+            </div>
+            <h2>Writing Custom Robot Framework Libraries in Python</h2>
+            <p class="blog-excerpt">Building Python test libraries for MQTT integration testing, payload validation with JSON schemas, and choosing the right library scope for your test suites.</p>
+            <span class="blog-read-more">Read More <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="connect fade-in">
+      <div class="video-banner">
+        <div class="section-title">
+          <h2>Have a Question?</h2>
+          <div class="underline"></div>
+        </div>
+        <p class="video-text">
+          Want to discuss any of these topics or have a technical question? Feel free to reach out.
+        </p>
+        <a href="contact.html" class="btn">Get in Touch</a>
+      </div>
+    </section>
+
+    <!-- back to top -->
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+
+    <!-- footer -->
+    <footer class="footer">
+      <ul class="social-icons">
+        <li>
+          <a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub">
+            <i class="fab fa-github"></i>
+          </a>
+        </li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+
+    <script src="./js/app.js"></script>
+  </body>
+</html>

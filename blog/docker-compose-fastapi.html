@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How to containerise a Python FastAPI application with Docker Compose, including PostgreSQL, Redis, and Nginx reverse proxy." />
+    <meta property="og:title" content="Dockerising a FastAPI App with Compose, Nginx &amp; Redis" />
+    <meta property="og:description" content="A practical guide to running a FastAPI backend with Docker Compose — including database, cache, and reverse proxy." />
+    <meta property="og:image" content="../images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="article" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog/docker-compose-fastapi.html" />
+    <title>Dockerising FastAPI with Compose | Hello Fahid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="../index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn"><i class="fas fa-bars"></i></button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        <ul class="sidebar-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+          <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="section single-page blog-post" id="main-content">
+      <div class="section-center blog-post-container">
+
+        <a href="../blog.html" class="blog-back-link"><i class="fas fa-arrow-left"></i> All Posts</a>
+
+        <div class="blog-post-header">
+          <div class="blog-tags">
+            <span class="case-tag">Docker</span>
+            <span class="case-tag">FastAPI</span>
+            <span class="case-tag">Nginx</span>
+            <span class="case-tag">Redis</span>
+          </div>
+          <h1>Dockerising a FastAPI App with Compose, Nginx &amp; Redis</h1>
+          <span class="blog-date"><i class="far fa-calendar-alt"></i> December 2025 &middot; 7 min read</span>
+        </div>
+
+        <p class="blog-intro">
+          Running <code>uvicorn main:app</code> locally is easy. Running it in production with a database, cache layer, and reverse proxy &mdash; that&#39;s where Docker Compose earns its keep. Here&#39;s the setup I use for most of my FastAPI projects.
+        </p>
+
+        <h2>The Stack</h2>
+        <p>A typical FastAPI project I deploy looks like this:</p>
+        <ul>
+          <li><strong>FastAPI</strong> &mdash; the Python API (running on Uvicorn)</li>
+          <li><strong>PostgreSQL</strong> &mdash; primary database</li>
+          <li><strong>Redis</strong> &mdash; caching and rate limiting</li>
+          <li><strong>Nginx</strong> &mdash; reverse proxy, TLS termination, static files</li>
+        </ul>
+        <p>All four services defined in one <code>docker-compose.yml</code>, with health checks and dependency ordering.</p>
+
+        <h2>The Dockerfile (Multi-Stage)</h2>
+        <p>Multi-stage builds keep the final image small by separating the build environment from the runtime:</p>
+        <pre><code># Stage 1: Install dependencies
+FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.12-slim
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY ./src .
+
+# Non-root user for security
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
+
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+        <p>
+          Key details: the <code>--no-cache-dir</code> flag avoids bloating the image with pip cache. Running as a non-root user is a basic security practice that many tutorials skip.
+        </p>
+
+        <h2>Docker Compose</h2>
+        <pre><code>services:
+  app:
+    build: .
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      retries: 5
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASS}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
+      interval: 5s
+      retries: 5
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:</code></pre>
+
+        <h2>Nginx Configuration</h2>
+        <p>Nginx sits in front of Uvicorn and handles things the app server shouldn&#39;t:</p>
+        <pre><code>upstream fastapi {
+    server app:8000;
+}
+
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://fastapi;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /static/ {
+        alias /var/www/static/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}</code></pre>
+        <p>
+          The <code>upstream</code> block references the Docker service name <code>app</code> &mdash; Docker&#39;s internal DNS resolves it automatically. No IP addresses needed.
+        </p>
+
+        <h2>Using Redis for Caching</h2>
+        <p>In FastAPI, I use Redis for caching expensive database queries:</p>
+        <pre><code>import redis
+import json, os
+
+r = redis.Redis(
+    host="redis",
+    port=6379,
+    password=os.environ["REDIS_PASS"],
+    decode_responses=True
+)
+
+async def get_device_summary(device_id: str):
+    cache_key = f"device:{device_id}:summary"
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)
+
+    # Expensive DB query
+    summary = await db.fetch_device_summary(device_id)
+    r.setex(cache_key, 300, json.dumps(summary))  # 5 min TTL
+    return summary</code></pre>
+
+        <h2>Lessons Learned</h2>
+        <ul>
+          <li><strong>Use health checks and <code>depends_on</code> conditions.</strong> Without them, your app container starts before PostgreSQL is ready, and you get connection errors on startup. The <code>service_healthy</code> condition solves this cleanly.</li>
+          <li><strong>Never put secrets in the Compose file.</strong> Use <code>env_file: .env</code> and add <code>.env</code> to <code>.gitignore</code>. In CI, inject secrets from your pipeline&#39;s secret store.</li>
+          <li><strong>Use named volumes for data persistence.</strong> Anonymous volumes get deleted on <code>docker compose down</code>. Named volumes survive and can be backed up.</li>
+          <li><strong>Pin your image versions.</strong> <code>postgres:latest</code> today might be a different major version tomorrow. Always use <code>postgres:16-alpine</code> or similar.</li>
+        </ul>
+
+      </div>
+    </article>
+
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+    <footer class="footer">
+      <ul class="social-icons">
+        <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+        <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+    <script src="../js/app.js"></script>
+  </body>
+</html>

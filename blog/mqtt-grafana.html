@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How I connected MQTT (Mosquitto) to Grafana through a Python pipeline for real-time IoT sensor monitoring." />
+    <meta property="og:title" content="How I Set Up MQTT with Grafana for Real-Time IoT Monitoring" />
+    <meta property="og:description" content="A step-by-step guide to building a real-time IoT monitoring dashboard with Mosquitto, Python, PostgreSQL, and Grafana." />
+    <meta property="og:image" content="../images/2025_TREON_017_FAHID-KHAN.jpg" />
+    <meta property="og:type" content="article" />
+    <link rel="canonical" href="https://fahid-khan.github.io/blog/mqtt-grafana.html" />
+    <title>MQTT + Grafana for IoT Monitoring | Hello Fahid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+    <link rel="stylesheet" href="../fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
+    <nav class="nav" id="nav">
+      <div class="nav-center">
+        <div class="nav-header">
+          <a href="../index.html" class="nav-logo-text">Hello <span>Fahid</span></a>
+          <button class="nav-btn" id="nav-btn"><i class="fas fa-bars"></i></button>
+        </div>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <button class="close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        <ul class="sidebar-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Services</a></li>
+          <li><a href="../blog.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+        <ul class="social-icons">
+          <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+          <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <article class="section single-page blog-post" id="main-content">
+      <div class="section-center blog-post-container">
+
+        <a href="../blog.html" class="blog-back-link"><i class="fas fa-arrow-left"></i> All Posts</a>
+
+        <div class="blog-post-header">
+          <div class="blog-tags">
+            <span class="case-tag">MQTT</span>
+            <span class="case-tag">Grafana</span>
+            <span class="case-tag">IoT</span>
+            <span class="case-tag">Python</span>
+          </div>
+          <h1>How I Set Up MQTT with Grafana for Real-Time IoT Monitoring</h1>
+          <span class="blog-date"><i class="far fa-calendar-alt"></i> March 2026 &middot; 8 min read</span>
+        </div>
+
+        <p class="blog-intro">
+          At work, we needed a way to monitor thousands of industrial sensors in real time. Here&#39;s how I connected MQTT (Mosquitto) to Grafana through a lightweight Python pipeline &mdash; and what I learned along the way.
+        </p>
+
+        <h2>The Problem</h2>
+        <p>
+          Our IoT devices publish telemetry (temperature, vibration, humidity) over MQTT. The data was landing in our backend, but engineers had no quick way to visualise trends or spot anomalies without digging through logs. We needed a real-time dashboard that anyone on the team could use.
+        </p>
+
+        <h2>Architecture Overview</h2>
+        <pre><code>IoT Sensors
+    │
+    │  MQTT (mosquitto:1883)
+    ▼
+┌──────────────────┐
+│  Python Subscriber│──▶ PostgreSQL (time-series data)
+│  (paho-mqtt)      │
+└──────────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   Grafana    │ ◀── SQL queries
+                    │  Dashboard   │
+                    └─────────────┘</code></pre>
+
+        <h2>Step 1: Set Up the Mosquitto Broker</h2>
+        <p>
+          I used a Docker Compose file to run Mosquitto alongside our other services. The key configuration points:
+        </p>
+        <pre><code># docker-compose.yml (excerpt)
+services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mqtt-data:/mosquitto/data
+
+# mosquitto.conf
+listener 1883
+allow_anonymous false
+password_file /mosquitto/config/passwd</code></pre>
+        <p>
+          Authentication matters even in internal networks. I generated the password file with <code>mosquitto_passwd</code> and mounted it as a volume. No plaintext credentials in the config.
+        </p>
+
+        <h2>Step 2: Python MQTT Subscriber</h2>
+        <p>
+          A lightweight Python service subscribes to the telemetry topic and inserts rows into PostgreSQL:
+        </p>
+        <pre><code>import paho.mqtt.client as mqtt
+import psycopg2
+import json, os
+
+def on_message(client, userdata, msg):
+    data = json.loads(msg.payload)
+    conn = userdata["db"]
+    with conn.cursor() as cur:
+        cur.execute(
+            """INSERT INTO telemetry
+               (device_id, metric, value, ts)
+               VALUES (%s, %s, %s, NOW())""",
+            (data["device_id"], data["type"], data["value"])
+        )
+    conn.commit()
+
+client = mqtt.Client(userdata={
+    "db": psycopg2.connect(os.environ["DATABASE_URL"])
+})
+client.username_pw_set(
+    os.environ["MQTT_USER"],
+    os.environ["MQTT_PASS"]
+)
+client.on_message = on_message
+client.connect("mqtt", 1883)
+client.subscribe("devices/+/telemetry")
+client.loop_forever()</code></pre>
+        <p>
+          The <code>+</code> wildcard in the topic lets us capture all device IDs without listing them individually. Credentials come from environment variables &mdash; never hardcoded.
+        </p>
+
+        <h2>Step 3: PostgreSQL Schema</h2>
+        <pre><code>CREATE TABLE telemetry (
+    id         BIGSERIAL PRIMARY KEY,
+    device_id  VARCHAR(64) NOT NULL,
+    metric     VARCHAR(32) NOT NULL,
+    value      DOUBLE PRECISION NOT NULL,
+    ts         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Index for Grafana time-range queries
+CREATE INDEX idx_telemetry_ts ON telemetry (ts DESC);
+CREATE INDEX idx_telemetry_device ON telemetry (device_id, ts DESC);</code></pre>
+        <p>
+          The two indexes are critical. Without the composite index on <code>(device_id, ts)</code>, Grafana queries filtering by device would do full table scans once you hit a few million rows.
+        </p>
+
+        <h2>Step 4: Grafana Dashboard</h2>
+        <p>
+          I added PostgreSQL as a Grafana data source and built panels with SQL queries:
+        </p>
+        <pre><code>-- Temperature over time (last 6 hours)
+SELECT
+  ts AS time,
+  device_id,
+  value
+FROM telemetry
+WHERE
+  metric = 'temperature'
+  AND ts > NOW() - INTERVAL '6 hours'
+ORDER BY ts;</code></pre>
+        <p>
+          Grafana&#39;s time-series panel handles the rest &mdash; one line per device, auto-refreshing every 10 seconds. I also added a stat panel for current values and an alert rule that fires when temperature exceeds 60&deg;C.
+        </p>
+
+        <h2>Lessons Learned</h2>
+        <ul>
+          <li><strong>Connection pooling matters.</strong> The initial version opened a new DB connection per message. At 500 msg/sec, that killed PostgreSQL. Switching to a connection pool (or a single persistent connection with reconnect logic) solved it.</li>
+          <li><strong>Use QoS 1 for telemetry.</strong> QoS 0 (&ldquo;fire and forget&rdquo;) loses messages under load. QoS 1 guarantees at-least-once delivery, which is acceptable for sensor data where duplicates are fine but gaps are not.</li>
+          <li><strong>Partition your tables.</strong> After a few months, the telemetry table had hundreds of millions of rows. Time-based partitioning (built into PostgreSQL 10+) made old data cleanup trivial and kept query performance stable.</li>
+        </ul>
+
+      </div>
+    </article>
+
+    <button class="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
+    <footer class="footer">
+      <ul class="social-icons">
+        <li><a href="https://www.linkedin.com/in/fahid-a-khan-46758819b/" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+        <li><a href="https://github.com/FAHID-KHAN" class="social-icon" aria-label="GitHub"><i class="fab fa-github"></i></a></li>
+      </ul>
+      <p>&copy; <span id="date"></span> Hello Fahid &mdash; All rights reserved.</p>
+    </footer>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
