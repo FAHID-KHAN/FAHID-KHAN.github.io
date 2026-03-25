@@ -862,28 +862,42 @@ Let the agent handle boilerplate while you focus on logic:
 
 ---
 
-# Blog-Aligned Projects — Build What You Write About
+# Learning Projects — Build to Understand
 
 ## Why These Projects?
 
-The 5 projects above are standalone portfolio pieces. The 6 projects below are **companion repos for each blog post** on the site. Every blog article claims you built something — these projects are the proof. Each one maps 1:1 to a blog post URL and covers the exact technologies discussed in that article.
+The 5 projects above are portfolio showcase pieces. The 6 projects below are **learning exercises** — designed so you actually understand the tools and concepts in your stack, not just use them. Each project is scoped small enough to finish in a few days, but deep enough to teach you *why* things work the way they do.
+
+The prompts are written so that when you use AI as a pair programmer, it explains its reasoning. You're not copying code — you're having a conversation about software engineering while building something real.
+
+**How to use these:**
+1. Read the "What You'll Learn" section first — these are your learning objectives
+2. Try each phase yourself for 20–30 minutes before using the prompts
+3. When you do use the prompts, read every line of the generated code and ask follow-up questions when something is unclear
+4. After each phase, write a 2–3 sentence note about what you learned (keep a `NOTES.md` in the repo)
 
 ---
 
-## Project 6: MQTT Telemetry Pipeline (Blog: mqtt-grafana)
+## Project 6: Real-Time Data Pipeline
 
-**Blog post:** `blog/mqtt-grafana.html`
-**Repo name:** `mqtt-telemetry-pipeline`
+**Repo name:** `realtime-data-pipeline`
 
 ### What You Build
-A production-style pipeline: simulated IoT sensors → Mosquitto MQTT broker → Python subscriber → PostgreSQL → Grafana dashboard. Everything runs in Docker Compose.
+Simulated sensors push data over MQTT → a Python service consumes and stores it in PostgreSQL → Grafana visualises it. The whole thing runs in Docker Compose.
 
-### Tech Coverage
+### What You'll Learn
+- **Message brokers (MQTT):** How pub/sub works, what QoS levels mean, why MQTT is used in IoT instead of HTTP
+- **Database design for time-series data:** Why indexes matter, what a composite index does, when to partition tables
+- **Connection pooling:** Why opening a new DB connection per message kills performance, how pools work
+- **Docker networking:** How containers find each other by service name, what Docker's internal DNS does
+- **Grafana provisioning:** How to auto-configure dashboards and datasources instead of clicking through the UI
+
+### Tech Stack
 Python, paho-mqtt, Mosquitto, PostgreSQL, psycopg2, Grafana, Docker Compose, SQL
 
 ### Folder Structure
 ```
-mqtt-telemetry-pipeline/
+realtime-data-pipeline/
 ├── docker-compose.yml
 ├── mosquitto/
 │   └── mosquitto.conf
@@ -893,83 +907,92 @@ mqtt-telemetry-pipeline/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── simulator/
-│   ├── sensor.py              # Generates fake telemetry
+│   ├── sensor.py              # Generates fake data
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── grafana/
 │   └── provisioning/
 │       ├── datasources/
-│       │   └── postgres.yml   # Auto-configure PG datasource
+│       │   └── postgres.yml
 │       └── dashboards/
 │           ├── dashboard.yml
-│           └── telemetry.json # Pre-built dashboard
+│           └── telemetry.json
 ├── sql/
-│   └── init.sql               # Schema + indexes
+│   └── init.sql
 ├── .env.example
+├── NOTES.md                   # Your learning notes
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — Schema & subscriber**
+**Phase 1 — Understand the database layer**
 
-> "I'm building an MQTT telemetry pipeline. Write `sql/init.sql` with a `telemetry` table: columns `id BIGSERIAL`, `device_id VARCHAR(64)`, `metric VARCHAR(32)`, `value DOUBLE PRECISION`, `ts TIMESTAMPTZ DEFAULT NOW()`. Add indexes on `(ts DESC)` and `(device_id, ts DESC)`. Add a comment explaining why the composite index matters."
+> "I'm learning about database design for time-series data. I need a PostgreSQL table to store sensor readings with columns: id (BIGSERIAL), device_id (VARCHAR 64), metric (VARCHAR 32), value (DOUBLE PRECISION), ts (TIMESTAMPTZ DEFAULT NOW()). Write the `init.sql` and then **explain to me:**
+> 1. Why TIMESTAMPTZ instead of TIMESTAMP?
+> 2. Why I need an index on `(ts DESC)` — what happens without it when Grafana queries the last 6 hours?
+> 3. Why a composite index on `(device_id, ts DESC)` is different from two separate indexes
+> 4. At what row count should I start thinking about table partitioning, and how does PostgreSQL native partitioning work?"
 
-> "Write `subscriber/db.py` using psycopg2 with a connection pool (`psycopg2.pool.ThreadedConnectionPool`, min=2, max=10). Two functions: `init_pool(dsn)` and `insert_telemetry(device_id, metric, value)`. The insert function should get a connection from the pool, execute the INSERT, commit, and return the connection to the pool. Include error handling that returns the connection on failure too."
+> "Now I need a Python module `db.py` that connects to PostgreSQL with a connection pool. Use `psycopg2.pool.ThreadedConnectionPool` (min=2, max=10). Write two functions: `init_pool(dsn)` and `insert_telemetry(device_id, metric, value)`. But before writing the code, **explain to me:**
+> 1. What is a connection pool and why would I need one? (explain with the analogy of a restaurant with 10 tables vs seating people one at a time)
+> 2. What happens if I don't return the connection to the pool after an error?
+> 3. What does `ThreadedConnectionPool` do differently from `SimpleConnectionPool`?
+> Then write the code with comments on each section."
 
-> "Write `subscriber/main.py` — a Python MQTT subscriber using paho-mqtt. It should: connect to broker (host/port/user/pass from env vars), subscribe to `devices/+/telemetry` with QoS 1, parse JSON payloads with keys `device_id`, `type`, `value`, and call `insert_telemetry()` from db.py. Use `loop_forever()`. Log connection events and errors."
+**Phase 2 — Understand MQTT**
 
-**Phase 2 — Simulator**
+> "I'm learning about MQTT. Write a Python MQTT subscriber (`main.py`) using paho-mqtt that connects to a broker, subscribes to `devices/+/telemetry` with QoS 1, and parses JSON messages. Before writing the code, **teach me:**
+> 1. What does the `+` wildcard mean in MQTT topics? How is it different from `#`?
+> 2. What are QoS 0, 1, and 2? Which should I use for sensor data and why?
+> 3. What is `loop_forever()` vs `loop_start()`? When would I use each?
+> 4. What happens to messages if my subscriber is offline? (explain retained messages and clean sessions)
+> Then write the subscriber with comments explaining each callback."
 
-> "Write `simulator/sensor.py` — a Python script that simulates 5 IoT sensors publishing to MQTT. Each sensor has a device_id (sensor-001 through sensor-005) and publishes temperature, humidity, or vibration. Temperature should drift between 18-35°C with Gaussian noise (std=0.5). Publish every 2 seconds per sensor using paho-mqtt to topic `devices/{device_id}/telemetry`. Read broker host/port/credentials from env vars."
+> "Write a simulator script that creates 5 fake sensors publishing temperature data to MQTT every 2 seconds. Use Gaussian noise for realism. **Explain:** why Gaussian noise instead of uniform random? What does a real sensor's output look like vs pure random numbers?"
 
-**Phase 3 — Docker Compose**
+**Phase 3 — Understand Docker Compose**
 
-> "Write `docker-compose.yml` with these services:
-> - `mqtt`: eclipse-mosquitto:2, port 1883, mounts `./mosquitto/mosquitto.conf`, with authentication
-> - `db`: postgres:16-alpine, with env vars from `.env`, a named volume `pgdata`, health check using `pg_isready`, mounts `./sql/init.sql` to `/docker-entrypoint-initdb.d/`
-> - `subscriber`: builds from `./subscriber`, depends on `db` (service_healthy) and `mqtt`, env vars for DB and MQTT
-> - `simulator`: builds from `./simulator`, depends on `mqtt`, env vars for MQTT
-> - `grafana`: grafana/grafana-oss:latest, port 3000, mounts `./grafana/provisioning`, depends on `db`
-> All services on a shared `backend` network. Include `.env.example` with all required variables."
+> "I need a `docker-compose.yml` to run 5 services: mqtt broker (mosquitto), postgres, my subscriber, my simulator, and grafana. Before writing it, **explain these concepts to me:**
+> 1. What does `depends_on: { db: { condition: service_healthy } }` do? Why isn't plain `depends_on: [db]` enough?
+> 2. What's a Docker health check and how does the container runtime use it?
+> 3. What's the difference between a named volume (`pgdata:`) and a bind mount (`./sql:/docker-entrypoint-initdb.d/`)?
+> 4. Why do I put all services on a shared network? Could the simulator talk to the db directly — and should it?
+> 5. What does `/docker-entrypoint-initdb.d/` do in the postgres image?
+> Then write the compose file with inline comments."
 
-> "Write `mosquitto/mosquitto.conf` with: listener 1883, `allow_anonymous false`, `password_file /mosquitto/config/passwd`. Add a comment in the README explaining how to generate the password file with `mosquitto_passwd`."
+**Phase 4 — Understand Grafana auto-provisioning**
 
-**Phase 4 — Grafana dashboard**
-
-> "Write `grafana/provisioning/datasources/postgres.yml` that auto-configures a PostgreSQL datasource called 'Telemetry DB' pointing to host `db`, port 5432, using env vars for user/pass/dbname."
-
-> "Write `grafana/provisioning/dashboards/telemetry.json` — a Grafana dashboard JSON with 3 panels:
-> 1. Time-series panel: temperature over time (last 6 hours), one line per device_id
-> 2. Stat panel: current average temperature across all devices
-> 3. Table panel: latest 20 telemetry readings
-> All panels query the PostgreSQL datasource. Use the provisioned datasource name."
-
-**Phase 5 — README**
-
-> "Write a README.md for this project. Include: what it does (1 paragraph), architecture diagram (ASCII), tech stack table, prerequisites (Docker, Docker Compose), quick start (`docker compose up`), accessing Grafana at localhost:3000, screenshot placeholder, and a section explaining the design decisions (connection pooling, QoS 1, composite indexes, table partitioning for scale). Link back to the blog post at `https://fahid-khan.github.io/blog/mqtt-grafana.html`."
+> "I want Grafana to start with a PostgreSQL datasource and dashboard already configured — no manual clicking. **Explain:** what is Grafana provisioning? How does it differ from importing a dashboard manually? Then write the YAML datasource config and a JSON dashboard with 3 panels (time-series, stat, table) with comments explaining the Grafana JSON structure."
 
 ---
 
-## Project 7: Jenkins IoT Pipeline (Blog: jenkins-iot-pipeline)
+## Project 7: CI/CD Pipeline From Scratch
 
-**Blog post:** `blog/jenkins-iot-pipeline.html`
-**Repo name:** `jenkins-iot-pipeline`
+**Repo name:** `cicd-pipeline-demo`
 
 ### What You Build
-A Jenkins CI/CD pipeline for a sample Python IoT backend — lint with ruff, unit tests with pytest, integration tests with Robot Framework (using a custom Python library), Docker image build/push, and staged deployment with manual approval gate.
+A working CI/CD pipeline: sample Python app → lint → unit tests → Robot Framework integration tests → Docker image → staged deployment with manual approval. Uses Jenkins (or GitHub Actions if you don't have Jenkins locally).
 
-### Tech Coverage
-Jenkins, Jenkinsfile, Docker, pytest, ruff, Robot Framework, Python, Ansible, Slack webhooks
+### What You'll Learn
+- **Pipeline-as-code:** Why Jenkinsfiles exist, what declarative vs scripted pipelines mean
+- **Testing pyramid:** Why lint runs first, then unit tests, then integration tests — and why order matters
+- **Robot Framework custom libraries:** How to extend RF with Python, what library scope means
+- **Docker multi-stage builds:** Why the build image and runtime image should be different
+- **Deployment gates:** Why manual approval stages exist, when to use them vs fully automated deploys
+- **Idempotent deployments:** Why you use Ansible instead of SSH + shell scripts
+
+### Tech Stack
+Jenkins (or GitHub Actions), Docker, pytest, ruff, Robot Framework, Python, Ansible, Bash
 
 ### Folder Structure
 ```
-jenkins-iot-pipeline/
-├── Jenkinsfile
+cicd-pipeline-demo/
+├── Jenkinsfile                # (or .github/workflows/pipeline.yml)
 ├── Dockerfile
 ├── requirements.txt
 ├── src/
-│   ├── app.py                 # Minimal FastAPI app (device API)
+│   ├── app.py                 # Minimal FastAPI app
 │   ├── routes/
 │   │   ├── devices.py
 │   │   └── telemetry.py
@@ -982,88 +1005,91 @@ jenkins-iot-pipeline/
 │       ├── smoke_test.robot
 │       ├── device_api.robot
 │       └── libraries/
-│           └── IoTPlatformLibrary.py
+│           └── ApiTestLibrary.py
 ├── ansible/
 │   ├── deploy.yml
-│   ├── inventory/
-│   │   ├── staging.yml
-│   │   └── production.yml
-│   └── roles/
-│       └── docker-deploy/
-│           └── tasks/main.yml
+│   └── inventory/
+│       └── staging.yml
 ├── scripts/
-│   └── notify_slack.sh
+│   └── notify.sh
+├── NOTES.md
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — Sample app to deploy**
+**Phase 1 — Build something to deploy**
 
-> "I'm building a CI/CD demo project. Write a minimal FastAPI app with two route files:
-> - `routes/devices.py`: GET /api/devices (returns hardcoded list of 3 devices with id, name, status), GET /api/devices/{id}
-> - `routes/telemetry.py`: POST /api/telemetry (accepts JSON with device_id, metric, value — validates with Pydantic, returns 201), GET /api/telemetry (returns last 10 entries from an in-memory list)
-> Keep it simple — this app exists just to have something real to build, test, and deploy."
+> "I'm learning about CI/CD. First I need a small app to put through a pipeline. Write a minimal FastAPI app with two route files: one for devices (GET list, GET by id) and one for telemetry (POST to submit, GET to list). Keep it simple — in-memory storage is fine. **While writing it, explain:**
+> 1. Why do I separate routes into different files instead of putting everything in main.py?
+> 2. What is Pydantic validation and why does FastAPI use it instead of manual `if` checks?
+> 3. What does the 422 status code mean and when does FastAPI return it automatically?"
 
-> "Write a multi-stage Dockerfile for this FastAPI app. Stage 1: install dependencies from requirements.txt with `--no-cache-dir`. Stage 2: copy app code, create non-root user `appuser`, expose 8000, run with uvicorn. Here's my requirements.txt: [paste]."
+> "Write a multi-stage Dockerfile for this app. **Before the code, teach me:**
+> 1. What is a multi-stage build? Draw the two stages as boxes and explain what goes in each.
+> 2. Why does `--no-cache-dir` matter in a Docker image? What's the size difference?
+> 3. Why should I run as a non-root user inside the container? What attack does this prevent?
+> 4. Why `COPY requirements.txt` before `COPY .` — what does this do for layer caching?"
 
-**Phase 2 — Tests**
+**Phase 2 — Write the tests (learn the testing pyramid)**
 
-> "Write pytest unit tests for `routes/devices.py` and `routes/telemetry.py` using FastAPI's TestClient. Test: GET /api/devices returns 200 with a list, GET /api/devices/unknown returns 404, POST /api/telemetry with valid JSON returns 201, POST /api/telemetry with missing fields returns 422. Output JUnit XML to `report.xml`."
+> "I need tests for my FastAPI app. **First explain the testing pyramid to me:**
+> 1. What are unit tests, integration tests, and end-to-end tests?
+> 2. Why are there more unit tests at the bottom and fewer E2E tests at the top?
+> 3. In a CI pipeline, why should unit tests run before integration tests?
+> Then write pytest unit tests using FastAPI's TestClient. Test happy paths and error cases (404, 422). Write them in a way where each test name describes the expected behavior."
 
-> "Write a custom Robot Framework library `IoTPlatformLibrary.py` with these keywords:
-> - `Get Device List` — calls GET /api/devices, returns the JSON list
-> - `Post Telemetry` (device_id, metric, value) — calls POST /api/telemetry
-> - `Device Count Should Be` (expected) — asserts length of device list
-> - `Response Status Should Be` (response, expected_code) — validates status code
-> Use the `requests` library. Accept a `base_url` constructor argument. Set `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`."
+> "Now I want to write Robot Framework tests. **First explain:**
+> 1. What is Robot Framework and why would someone use it instead of just pytest?
+> 2. What is the difference between keyword-driven testing and code-driven testing?
+> 3. What does `ROBOT_LIBRARY_SCOPE` do? Explain TEST CASE vs TEST SUITE vs GLOBAL with a database connection example.
+> Then write a custom Python library `ApiTestLibrary.py` that wraps HTTP calls to my FastAPI app. Use the `requests` library. Write test suites `smoke_test.robot` and `device_api.robot`."
 
-> "Write two Robot Framework test suites:
-> - `smoke_test.robot`: verify the API is reachable, device list returns 3 devices, posting telemetry returns 201
-> - `device_api.robot`: test each device endpoint, test invalid device returns 404, test telemetry validation rejects bad payloads
-> Use the IoTPlatformLibrary. Configure the base_url as a Robot variable so it works in staging and production."
+**Phase 3 — The pipeline itself**
 
-**Phase 3 — Jenkinsfile**
+> "Now write a Jenkinsfile (declarative pipeline) with stages: Lint, Unit Tests, Robot Framework, Build Docker Image, Deploy to Staging, Approval, Deploy to Production. **For each stage, explain to me:**
+> 1. Lint — what does `ruff` check for? Why run it before any tests?
+> 2. Unit Tests — what does `--junitxml=report.xml` do and why does Jenkins need it?
+> 3. Robot Framework — what is the `passThreshold: 95.0` and why not 100%?
+> 4. Build — why tag the image with `BUILD_NUMBER` instead of `latest`?
+> 5. Approval — what's an `input` step? Why would you want a human in the loop?
+> 6. Post/failure — why send a notification on failure but not on success?
+> Write the Jenkinsfile with comments explaining each block."
 
-> "Write a declarative Jenkinsfile with these stages:
-> 1. Lint — install and run `ruff check src/`
-> 2. Unit Tests — run `pytest tests/unit/ --junitxml=report.xml`, archive results with `junit`
-> 3. Robot Framework — run `robot --outputdir results/ tests/robot/`, archive with the Robot Framework Jenkins plugin, set 95% pass threshold
-> 4. Build & Push — build Docker image tagged with `BUILD_NUMBER`, push to registry (use env vars `REGISTRY` and `IMAGE`)
-> 5. Deploy to Staging — run `ansible-playbook ansible/deploy.yml -i ansible/inventory/staging.yml -e image_tag=${BUILD_NUMBER}`
-> 6. Approval — `input` step with message 'Deploy to production?'
-> 7. Deploy to Production — same ansible command with production inventory
-> Add a `post { failure }` block that calls `scripts/notify_slack.sh`."
+> "If I don't have Jenkins locally, write the same pipeline as a GitHub Actions workflow. **Explain:** what's the difference between Jenkins and GitHub Actions? Which parts map to which?"
 
-**Phase 4 — Ansible deployment**
+**Phase 4 — Deployment with Ansible**
 
-> "Write an Ansible playbook `ansible/deploy.yml` that:
-> 1. Connects to hosts in the `backend` group
-> 2. Pulls the Docker image `{{ registry }}/{{ image }}:{{ image_tag }}`
-> 3. Stops the existing container if running
-> 4. Starts a new container on port 8000 with `--restart unless-stopped`
-> 5. Waits 10 seconds then runs a health check (curl localhost:8000/health)
-> 6. Fails the playbook if the health check returns non-200
-> Use variables for registry, image, image_tag passed via `-e` on the command line."
-
-> "Write `scripts/notify_slack.sh` — a Bash script that sends a Slack notification. Accept `$SLACK_WEBHOOK` env var. Post a JSON payload with the message 'Pipeline #$BUILD_NUMBER failed for $JOB_NAME'. Include error handling — if curl fails, log to stderr but don't exit non-zero (don't break the pipeline over a notification failure)."
+> "Write an Ansible playbook that deploys my Docker container to a remote server. **But first teach me:**
+> 1. What is Ansible and why not just use `ssh user@server 'docker pull ... && docker run ...'`?
+> 2. What does 'idempotent' mean? Give me an example of an idempotent task vs a non-idempotent one.
+> 3. What is an Ansible role vs a playbook vs a task?
+> 4. What is an inventory file and why do I have separate ones for staging and production?
+> Then write the playbook with a health check that fails the deployment if the app doesn't respond."
 
 ---
 
-## Project 8: Terraform Azure Infrastructure (Blog: terraform-azure)
+## Project 8: Infrastructure as Code
 
-**Blog post:** `blog/terraform-azure.html`
-**Repo name:** `terraform-azure-iot`
+**Repo name:** `infrastructure-as-code`
 
 ### What You Build
-A real Terraform project that provisions Azure infrastructure: resource group, IoT Hub with storage routes, VNet with subnets and NSGs, remote state in Azure Storage with locking. Structured with reusable modules and separate staging/production environments.
+Terraform configs that provision real Azure infrastructure: resource group, virtual network, IoT Hub, storage — with remote state, reusable modules, and a CI workflow that runs `terraform plan` on PRs.
 
-### Tech Coverage
-Terraform, HCL, Azure, Azure IoT Hub, Azure Storage, networking, remote state, CI/CD
+### What You'll Learn
+- **IaC fundamentals:** What "infrastructure as code" means, why clicking in a portal is a problem at scale
+- **Terraform concepts:** Providers, resources, state, plan vs apply, modules, variables, outputs
+- **Remote state:** Why local state files break in a team, how state locking prevents corruption
+- **Networking basics:** VNets, subnets, NSGs, CIDR notation, why you segment networks
+- **Lifecycle management:** What `prevent_destroy` does, how to handle state drift
+- **CI for infrastructure:** Why you run `terraform plan` on PRs and `apply` on merge
+
+### Tech Stack
+Terraform, HCL, Azure, Azure IoT Hub, Azure Storage, Bash, GitHub Actions
 
 ### Folder Structure
 ```
-terraform-azure-iot/
+infrastructure-as-code/
 ├── modules/
 │   ├── networking/
 │   │   ├── main.tf
@@ -1081,84 +1107,90 @@ terraform-azure-iot/
 │   ├── staging/
 │   │   ├── main.tf
 │   │   ├── backend.tf
-│   │   ├── variables.tf
 │   │   └── terraform.tfvars
 │   └── production/
 │       ├── main.tf
 │       ├── backend.tf
-│       ├── variables.tf
 │       └── terraform.tfvars
 ├── scripts/
-│   ├── bootstrap-state.sh     # One-time: create storage for remote state
-│   └── plan-and-apply.sh      # CI helper script
+│   ├── bootstrap-state.sh
+│   └── plan-and-apply.sh
 ├── .github/
 │   └── workflows/
-│       └── terraform.yml      # GitHub Actions: plan on PR, apply on merge
-├── .gitignore
+│       └── terraform.yml
+├── NOTES.md
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — Modules**
+**Phase 1 — Understand the fundamentals**
 
-> "Write a Terraform module at `modules/networking/` that creates:
-> - An Azure resource group
-> - A VNet with address space `10.0.0.0/16`
-> - Two subnets: `backend` (10.0.1.0/24) and `iot` (10.0.2.0/24)
-> - An NSG attached to the backend subnet with rules: allow SSH (22) from a configurable CIDR, allow HTTPS (443) from anywhere, allow MQTT (1883) from the iot subnet only, deny all other inbound
-> Variables: `resource_group_name`, `location`, `allowed_ssh_cidr`, `tags`. Outputs: `resource_group_name`, `vnet_id`, `backend_subnet_id`, `iot_subnet_id`."
+> "I'm learning Terraform from scratch. Before writing any code, **explain these concepts to me like I'm a developer who has only used cloud portals before:**
+> 1. What is Infrastructure as Code? Why can't I just click 'Create VM' in the Azure portal?
+> 2. What is Terraform state? Why does Terraform need to remember what it created?
+> 3. What does `terraform plan` show me? What does `terraform apply` do? Why are they separate commands?
+> 4. What is a Terraform provider? Why do I need to declare one for Azure?
+> 5. What is HCL and how is it different from YAML or JSON?
+> Give me a simple example: create one Azure resource group. Walk me through every line."
 
-> "Write a Terraform module at `modules/iot/` that creates:
-> - An Azure IoT Hub with configurable SKU (name and capacity)
-> - A storage container endpoint for archiving device messages as JSON
-> - A route that sends all DeviceMessages to that storage endpoint
-> - `lifecycle { prevent_destroy = true }` on the IoT Hub
-> Variables: `iot_hub_name`, `resource_group_name`, `location`, `sku_name` (default S1), `sku_capacity` (default 1), `storage_connection_string`, `tags`. Outputs: `iot_hub_name`, `iot_hub_hostname`, `event_hub_endpoint`."
+> "Now explain Terraform modules to me. **Use this analogy:** I have a function `create_vm(name, size, region)` — how is a Terraform module similar to that? Why would I create a module vs writing all resources in one file? What are `variables.tf`, `outputs.tf`, and `main.tf` — map them to function parameters, return values, and function body."
 
-> "Write a Terraform module at `modules/storage/` that creates:
-> - An Azure Storage Account (LRS, Hot tier)
-> - A blob container called `telemetry`
-> - `lifecycle { prevent_destroy = true }` on the storage account
-> Variables: `storage_account_name`, `resource_group_name`, `location`, `tags`. Outputs: `connection_string`, `primary_access_key`, `storage_account_id`."
+**Phase 2 — Build the networking module**
 
-**Phase 2 — Environments**
+> "Write a Terraform module at `modules/networking/` that creates: a resource group, a VNet (10.0.0.0/16), two subnets (backend 10.0.1.0/24, iot 10.0.2.0/24), and an NSG. **Before writing, teach me:**
+> 1. What is a VNet — explain it like a physical office building with floors
+> 2. What is CIDR notation? What does /16 vs /24 mean in terms of available addresses?
+> 3. What is an NSG and why do I need one? What happens to traffic without NSG rules?
+> 4. Why would I restrict MQTT (port 1883) access to only the iot subnet instead of allowing it from anywhere?
+> Then write the module with comments explaining each resource block."
 
-> "Write `environments/staging/main.tf` that calls all three modules with staging-appropriate values: S1 IoT Hub with capacity 1, small VNet, tags `{ environment = 'staging', managed-by = 'terraform', project = 'iot-platform' }`. Pass the storage connection string from the storage module output into the iot module."
+**Phase 3 — IoT Hub + Storage modules**
 
-> "Write `environments/staging/backend.tf` with an `azurerm` backend pointing to a storage account for remote state. Resource group: `rg-terraform-state`, storage account: `stterraformstate`, container: `tfstate`, key: `staging.tfstate`."
+> "Write two more modules: `modules/iot/` for Azure IoT Hub and `modules/storage/` for Azure Storage. The IoT Hub should route device messages to a storage container. **Explain:**
+> 1. What does `lifecycle { prevent_destroy = true }` do? When would Terraform try to destroy a resource, and why is that scary for a database?
+> 2. What are Terraform outputs? Why would the storage module output a connection string that the IoT module needs?
+> 3. How do modules pass data to each other — compare it to function return values being passed as arguments to another function."
 
-> "Write `environments/production/main.tf` — same module calls as staging but with: S2 IoT Hub with capacity 4, production tags. Show how the same modules serve both environments with different tfvars."
+**Phase 4 — Remote state and environments**
 
-**Phase 3 — Bootstrap & CI**
+> "I want staging and production environments using the same modules but different values. **Explain:**
+> 1. What is remote state? Why can't I just commit `terraform.tfstate` to git?
+> 2. What is state locking? What happens if two people run `terraform apply` at the same time without locking?
+> 3. How does the `environments/` folder pattern work — how do staging and production share module code but differ in configuration?
+> Write `environments/staging/main.tf` that calls all three modules, `backend.tf` for Azure Storage remote state, and `terraform.tfvars` with staging values. Explain the difference from what production would look like."
 
-> "Write `scripts/bootstrap-state.sh` — a Bash script that creates the Azure Storage account for Terraform remote state. It should: create the resource group, create the storage account with blob versioning enabled, create the `tfstate` container, and output the storage account name. Use `az` CLI commands. Add comments explaining this is a one-time manual step."
+**Phase 5 — CI for infrastructure**
 
-> "Write a GitHub Actions workflow `.github/workflows/terraform.yml` that:
-> - On pull_request: runs `terraform init`, `terraform validate`, `terraform plan` for the staging environment, posts the plan output as a PR comment
-> - On push to main: runs `terraform init`, `terraform plan -out=tfplan`, `terraform apply tfplan` for staging
-> Use OIDC authentication with Azure (federated credentials). Set up job permissions for `id-token: write`. Store the Azure subscription ID, tenant ID, and client ID as GitHub secrets."
-
-**Phase 4 — README**
-
-> "Write a README.md with: project description (1 paragraph), module diagram (show how networking/storage/iot modules compose), prerequisites (Terraform 1.5+, Azure CLI, Azure subscription), setup instructions (bootstrap state, terraform init/plan/apply), environment differences (staging vs production table), CI/CD explanation, and a link to the blog post at `https://fahid-khan.github.io/blog/terraform-azure.html`. Include a gotchas section covering: state drift detection, prevent_destroy, tagging convention."
+> "Write a GitHub Actions workflow that runs `terraform plan` on pull requests and `terraform apply` on merges to main. **Explain:**
+> 1. Why plan on PRs and apply on merge — not the other way around?
+> 2. What is `-out=tfplan` and why is it important for safety?
+> 3. What is OIDC authentication with Azure? Why is it better than putting a client secret in GitHub secrets?
+> Write the workflow with comments, and also write a `scripts/bootstrap-state.sh` that creates the storage account for remote state (explain why this is a manual one-time step)."
 
 ---
 
-## Project 9: FastAPI Docker Compose Stack (Blog: docker-compose-fastapi)
+## Project 9: Production-Ready API Template
 
-**Blog post:** `blog/docker-compose-fastapi.html`
-**Repo name:** `fastapi-compose-stack`
+**Repo name:** `fastapi-production-template`
 
 ### What You Build
-A production-ready Docker Compose setup: multi-stage FastAPI Dockerfile, PostgreSQL with health checks, Redis caching layer, Nginx reverse proxy with static file serving. A template you can fork for any FastAPI project.
+A FastAPI app running behind Nginx with PostgreSQL and Redis, all in Docker Compose. Multi-stage Dockerfile, health checks, caching, and proper secret management. A template you'll reuse for every future Python API project.
 
-### Tech Coverage
-Docker, Docker Compose, FastAPI, Uvicorn, PostgreSQL, Redis, Nginx, Python, multi-stage builds
+### What You'll Learn
+- **Reverse proxies:** What Nginx does in front of an app server, why you don't expose Uvicorn directly
+- **Caching patterns:** How Redis sits between your app and database, when to cache vs not cache
+- **Health checks:** How container orchestrators use health endpoints to decide if your app is alive
+- **Secret management:** Why `.env` files exist, why they never go in git, what the alternatives are in production
+- **Multi-stage Docker builds:** How to keep images small by separating build-time and runtime dependencies
+- **Async database access:** How async SQLAlchemy differs from synchronous, when it matters
+
+### Tech Stack
+Docker, Docker Compose, FastAPI, Uvicorn, PostgreSQL, SQLAlchemy, Redis, Nginx, Python
 
 ### Folder Structure
 ```
-fastapi-compose-stack/
+fastapi-production-template/
 ├── docker-compose.yml
 ├── .env.example
 ├── app/
@@ -1167,82 +1199,99 @@ fastapi-compose-stack/
 │   │   ├── items.py
 │   │   └── health.py
 │   ├── services/
-│   │   ├── cache.py           # Redis helpers
-│   │   └── database.py        # SQLAlchemy setup
+│   │   ├── cache.py
+│   │   └── database.py
 │   ├── models.py
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── nginx/
-│   ├── nginx.conf
-│   └── certs/                 # Self-signed for local dev
+│   └── nginx.conf
 ├── static/
-│   └── index.html             # Simple landing page
+│   └── index.html
 ├── tests/
 │   ├── test_items.py
 │   └── test_health.py
+├── NOTES.md
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — App + Dockerfile**
+**Phase 1 — Understand the architecture first**
 
-> "Write a FastAPI app with two route files:
-> - `routes/health.py`: GET /health returns `{ 'status': 'ok', 'db': true, 'cache': true }` — actually ping PostgreSQL and Redis, return false for either if unreachable
-> - `routes/items.py`: CRUD endpoints for a simple Item model (id, name, description, created_at). GET /api/items uses Redis caching with 5-minute TTL. POST/PUT/DELETE invalidate the cache.
-> Use SQLAlchemy async with PostgreSQL. Use `redis.Redis` for caching. Read all connection strings from environment variables."
+> "I'm building a production-ready FastAPI setup. Before any code, **draw me the architecture and explain each layer:**
+> 1. Why does Nginx sit in front of Uvicorn? What would go wrong if I exposed Uvicorn directly to the internet?
+> 2. What is a reverse proxy? How is it different from a forward proxy (like a VPN)?
+> 3. Why use Redis as a cache? What's the difference between caching in Redis vs caching in Python memory (a dict)?
+> 4. What happens to the cached data when the app restarts? What about when Redis restarts?
+> 5. Why do I need a `.env` file? What should NEVER go in `docker-compose.yml` directly?
+> Draw an ASCII diagram showing: Client → Nginx → Uvicorn/FastAPI → PostgreSQL + Redis"
 
-> "Write `services/database.py` with async SQLAlchemy engine and session setup. Read `DATABASE_URL` from env. Include a `get_db` dependency and an `init_db` function that creates tables on startup."
+**Phase 2 — Database layer**
 
-> "Write `services/cache.py` with Redis connection helpers. Functions: `get_cached(key)`, `set_cached(key, value, ttl=300)`, `invalidate(key)`. Read `REDIS_URL` from env. Decode responses. Handle `ConnectionError` gracefully — return None on cache miss if Redis is down, don't crash the app."
+> "Write `services/database.py` with async SQLAlchemy setup. **But first teach me:**
+> 1. What is SQLAlchemy and why use it instead of raw SQL with psycopg2?
+> 2. What is an ORM? What are the pros and cons?
+> 3. What does 'async' mean for database access? When does it actually improve performance vs regular synchronous code?
+> 4. What is a database session and why do I need `get_db` as a dependency in FastAPI?
+> Then write the code with a simple Item model (id, name, description, created_at)."
 
-> "Write a multi-stage Dockerfile:
-> - Stage 1 (`builder`): python:3.12-slim, install dependencies from requirements.txt with `--no-cache-dir --prefix=/install`
-> - Stage 2: python:3.12-slim, copy installed packages from builder, copy app code, create non-root user `appuser`, switch to it, expose 8000, CMD uvicorn
-> Keep it under 30 lines."
+**Phase 3 — Caching layer**
 
-**Phase 2 — Docker Compose**
+> "Write `services/cache.py` with Redis helpers: `get_cached(key)`, `set_cached(key, value, ttl)`, `invalidate(key)`. **Teach me:**
+> 1. What is a cache TTL? How do I decide whether it should be 30 seconds or 5 minutes?
+> 2. What is the 'cache invalidation problem' and why is it called one of the two hard things in computer science?
+> 3. Should the app crash if Redis is down? Why or why not? What pattern handles this? (explain graceful degradation)
+> 4. What is a cache stampede? When 1000 requests hit a cold cache at the same time, what happens?
+> Write the code so that Redis being unavailable never crashes the app — explain each error handling decision."
 
-> "Write `docker-compose.yml` with 4 services:
-> - `app`: builds from `./app`, env_file `.env`, depends on db (service_healthy) and redis (service_healthy), network: backend
-> - `db`: postgres:16-alpine, env vars for POSTGRES_DB/USER/PASSWORD from `.env`, named volume `pgdata`, health check with `pg_isready`, network: backend
-> - `redis`: redis:7-alpine, `redis-server --requirepass ${REDIS_PASS}`, health check with `redis-cli -a ${REDIS_PASS} ping`, network: backend
-> - `nginx`: nginx:alpine, ports 80:80, mounts `./nginx/nginx.conf` read-only, mounts `./static` to `/var/www/static` read-only, depends on app, network: backend
-> Named volume `pgdata`. Network `backend`."
+**Phase 4 — Routes with caching**
 
-**Phase 3 — Nginx**
+> "Write CRUD routes for the Item model. GET /api/items should use Redis caching. POST/PUT/DELETE should invalidate the cache. **Explain:**
+> 1. Why cache the GET but invalidate on write? What would happen if I didn't invalidate?
+> 2. What is the 'read-through cache' pattern vs 'write-through'? Which am I implementing?
+> 3. Write a health endpoint that actually pings both PostgreSQL and Redis — explain why a health check should test real dependencies, not just return `{ 'status': 'ok' }`."
 
-> "Write `nginx/nginx.conf` with an upstream block pointing to `app:8000`. Server block on port 80:
-> - `location /` proxies to the upstream with headers: Host, X-Real-IP, X-Forwarded-For, X-Forwarded-Proto
-> - `location /static/` serves files from `/var/www/static/` with 30-day cache and `Cache-Control: public, immutable`
-> - `location /health` proxies to the upstream (no caching)
-> Include `client_max_body_size 10m` and `proxy_read_timeout 30s`."
+**Phase 5 — Docker + Nginx**
 
-**Phase 4 — Tests + README**
+> "Write the Dockerfile (multi-stage), docker-compose.yml (4 services), and nginx.conf. **For each, teach me:**
+> 1. Dockerfile: What does `COPY --from=builder /install /usr/local` actually do? Why is the final image smaller?
+> 2. Compose: What does `condition: service_healthy` do that regular `depends_on` can't?
+> 3. Nginx: What do the `proxy_set_header` lines do? What breaks if I skip `X-Forwarded-For`?
+> 4. Nginx: Why serve static files from Nginx instead of through FastAPI? What's the performance difference?
+> Write all three files with inline comments explaining each decision."
 
-> "Write pytest tests using FastAPI TestClient:
-> - `test_health.py`: test /health returns 200 with status ok
-> - `test_items.py`: test CRUD lifecycle — create item, get item, list items, update item, delete item. Each test asserts correct status code and response body.
-> Use fixtures for the test client. Override the database dependency to use an in-memory SQLite for tests."
+**Phase 6 — Tests**
 
-> "Write a README.md: what it does, architecture diagram (Nginx → FastAPI → PostgreSQL + Redis), tech stack, quick start (`cp .env.example .env && docker compose up`), accessing the API at localhost/api/items, health check at localhost/health, design decisions (why multi-stage, why non-root user, why health checks with depends_on conditions, why named volumes, why never put secrets in compose files). Link to blog post."
+> "Write pytest tests using TestClient. **First explain:**
+> 1. How does FastAPI TestClient work? Does it actually start a server?
+> 2. How do I override the database dependency to use SQLite in tests? Why not test against the real PostgreSQL?
+> 3. What's a test fixture in pytest? How is it different from a setup/teardown method?
+> Write tests that cover the full CRUD lifecycle and the health endpoint."
 
 ---
 
-## Project 10: Ansible Server Automation (Blog: ansible-server-automation)
+## Project 10: Server Automation Playbooks
 
-**Blog post:** `blog/ansible-server-automation.html`
-**Repo name:** `ansible-server-playbooks`
+**Repo name:** `server-automation`
 
 ### What You Build
-A set of Ansible playbooks and roles for provisioning Ubuntu servers and deploying Dockerised applications. Includes security hardening, Jinja2 templated configs, Ansible Vault for secrets, and a reusable role structure.
+Ansible playbooks that provision a fresh Ubuntu server: install packages, harden SSH, configure firewall, install Docker, deploy a Dockerised app with templated configs, encrypted secrets.
 
-### Tech Coverage
-Ansible, Ansible Vault, Jinja2 templates, Linux, UFW, fail2ban, SSH hardening, Docker, Docker Compose, Bash
+### What You'll Learn
+- **Configuration management:** What Ansible does and why it exists (not just for deployment)
+- **Idempotency:** The most important concept in automation — why running a playbook twice should be safe
+- **SSH hardening:** Why disable root login, why disable password auth, what fail2ban does
+- **Firewalls (UFW):** What a firewall actually does at the network level, default deny vs allow
+- **Jinja2 templating:** How config files are generated dynamically, how Ansible variables flow
+- **Secrets management:** What Ansible Vault encrypts, why plaintext secrets in git repos is dangerous
+
+### Tech Stack
+Ansible, Ansible Vault, Jinja2, Linux, UFW, fail2ban, SSH, Docker, Docker Compose, Bash
 
 ### Folder Structure
 ```
-ansible-server-playbooks/
+server-automation/
 ├── ansible.cfg
 ├── inventory/
 │   ├── staging.yml
@@ -1261,83 +1310,95 @@ ansible-server-playbooks/
 │   │   └── templates/
 │   │       └── docker-compose.yml.j2
 │   └── monitoring/
-│       ├── tasks/main.yml
-│       └── templates/
-│           └── prometheus.yml.j2
+│       └── tasks/main.yml
 ├── playbooks/
 │   ├── provision.yml
 │   ├── deploy.yml
 │   └── monitoring.yml
-├── scripts/
-│   └── vault-password.sh      # Retrieves vault pass from env
+├── NOTES.md
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — Common role (security hardening)**
+**Phase 1 — Understand Ansible before writing anything**
 
-> "Write the Ansible role `roles/common/tasks/main.yml` that:
-> 1. Updates apt cache (cache_valid_time: 3600)
-> 2. Installs: curl, git, ufw, fail2ban, unattended-upgrades
-> 3. Configures UFW: allow ports 22, 80, 443 (tcp), enable UFW with default deny
-> 4. Disables root SSH login via lineinfile on `/etc/ssh/sshd_config`
-> 5. Sets `PasswordAuthentication no` in sshd_config
-> 6. Notifies a handler to restart sshd
-> Write the handler in `roles/common/handlers/main.yml`. All tasks should be idempotent."
+> "I'm learning Ansible from zero. **Explain these concepts to me before I write any code:**
+> 1. What is Ansible and what problem does it solve? (use an analogy: imagine you have 20 servers and need to update a config file on all of them)
+> 2. What is a playbook, a role, a task, and a handler? How do they relate to each other? (use a cooking analogy: recipe book → recipe → steps → 'call me when the oven is ready')
+> 3. What does 'idempotent' mean? Give me 3 examples: a task that IS idempotent, a task that IS NOT, and how to fix the non-idempotent one
+> 4. What is an inventory file? Why do I have a separate one for staging vs production?
+> 5. How does Ansible connect to servers — does it install an agent? (explain agentless with SSH)
+> 6. What is `become: true` — why do some tasks need it and others don't?"
 
-**Phase 2 — Docker role**
+**Phase 2 — Security hardening role**
 
-> "Write `roles/docker/tasks/main.yml` that installs Docker CE on Ubuntu:
-> 1. Install prerequisites: apt-transport-https, ca-certificates, curl, gnupg
-> 2. Add Docker's official GPG key
-> 3. Add Docker apt repository
-> 4. Install docker-ce, docker-ce-cli, containerd.io, docker-compose-plugin
-> 5. Start and enable the docker service
-> 6. Add the `deploy` user to the `docker` group
-> Use the `apt_key`, `apt_repository`, and `apt` modules. Make it idempotent."
+> "Write `roles/common/tasks/main.yml` that: updates apt, installs curl/git/ufw/fail2ban/unattended-upgrades, configures UFW (allow 22/80/443, default deny), disables root SSH login, disables password SSH. **For each task, explain:**
+> 1. Why `cache_valid_time: 3600` on apt update? What happens if I skip it?
+> 2. What is UFW and what is it actually doing at the Linux kernel level? (briefly explain iptables)
+> 3. Why 'default deny' is the right firewall policy — what does this mean for a new port I forget to open?
+> 4. Why disable root login? What's a privilege escalation attack?
+> 5. Why disable password auth? What is brute-force SSH and how does key-only auth prevent it?
+> 6. What does fail2ban do? How does it detect and block brute-force attempts?
+> Write the handler for restarting sshd and explain: why use a handler instead of a task? When does the handler actually run?"
 
-**Phase 3 — App deployment role**
+**Phase 3 — Docker installation role**
 
-> "Write `roles/app-deploy/tasks/main.yml` that:
-> 1. Creates `/opt/app` directory owned by `deploy` user, mode 0755
-> 2. Templates `docker-compose.yml.j2` to `/opt/app/docker-compose.yml` with mode 0600
-> 3. Runs `docker compose pull` in `/opt/app`
-> 4. Runs `docker compose up -d --remove-orphans` in `/opt/app`
-> 5. Waits 15 seconds for services to start
-> 6. Runs a health check: `curl -sf http://localhost:8000/health` — fails the playbook if it returns non-zero
-> Write the Jinja2 template `docker-compose.yml.j2` that uses variables: `{{ docker_registry }}`, `{{ image_name }}`, `{{ image_tag }}`, `{{ db_password }}`, `{{ redis_password }}`."
+> "Write `roles/docker/tasks/main.yml` to install Docker on Ubuntu. **Explain:**
+> 1. Why install Docker from Docker's repo instead of Ubuntu's default `docker.io` package?
+> 2. What is `apt_key` doing? What is a GPG key and why do package managers need them? (explain supply chain security simply)
+> 3. Why add the `deploy` user to the `docker` group? What's the alternative? (explain running docker without sudo vs with sudo)
+> 4. What does 'enabled: true' on a service mean? (explain systemd service management)"
 
-**Phase 4 — Playbooks, Vault, inventory**
+**Phase 4 — App deployment with templates**
 
-> "Write `playbooks/provision.yml` that runs the `common` and `docker` roles on hosts in the `backend` group with `become: true`."
+> "Write `roles/app-deploy/tasks/main.yml` that templates a docker-compose file and deploys it. **Teach me:**
+> 1. What is Jinja2 templating? Show me how `{{ db_password }}` gets replaced — where does the value come from?
+> 2. What is the flow of variables in Ansible? (group_vars → role vars → extra vars — explain precedence)
+> 3. Why set file mode `0600` on docker-compose.yml — what do the numbers mean? (explain Unix file permissions: owner/group/other, read/write/execute)
+> 4. After deploying, why run a health check? What should happen if it fails?
+> Write the Jinja2 template and the deployment tasks with comments."
 
-> "Write `playbooks/deploy.yml` that runs the `app-deploy` role on `backend` hosts. Accept `image_tag` as an extra variable."
+**Phase 5 — Secrets with Ansible Vault**
 
-> "Write `inventory/staging.yml` with a `backend` group containing one host `staging-server` with `ansible_host`, `ansible_user: deploy`, `ansible_ssh_private_key_file`. Write `group_vars/all.yml` with shared variables: `docker_registry`, `image_name`, `app_port: 8000`. Explain in a comment that `group_vars/production.yml` should be encrypted with Ansible Vault."
+> "Show me how to use Ansible Vault. **Explain:**
+> 1. What does Ansible Vault encrypt? Where does the encryption key live?
+> 2. What's the difference between `--ask-vault-pass` and `--vault-password-file`? Which is used in CI?
+> 3. Can I commit vault-encrypted files to git? Is that safe? (explain the cryptographic guarantee)
+> 4. What happens if someone gets the encrypted file but not the password?
+> Write `group_vars/production.yml` with example secrets, show me how to encrypt it, and show how a playbook reads the decrypted values."
 
-> "Write the README.md with: what these playbooks do, role descriptions, prerequisites (Ansible 2.14+, SSH access to target servers), usage examples (`ansible-playbook playbooks/provision.yml -i inventory/staging.yml`), Vault usage (encrypt, decrypt, run with `--ask-vault-pass` and `--vault-password-file`), a section on `--check` dry-run mode, and `ansible-lint` usage. Link to the blog post."
+**Phase 6 — Dry runs and linting**
+
+> "Explain `--check` (dry run) mode: what it does, when to use it, and what it CAN'T catch. Then explain ansible-lint: what rules it checks for and show me 3 examples of common mistakes it catches. Why should I run `ansible-lint` in CI before any real deployment?"
 
 ---
 
-## Project 11: Robot Framework Test Suite (Blog: robot-framework-python-libraries)
+## Project 11: Test Automation Framework
 
-**Blog post:** `blog/robot-framework-python-libraries.html`
-**Repo name:** `robot-framework-iot-tests`
+**Repo name:** `test-automation-framework`
 
 ### What You Build
-A Robot Framework test suite with custom Python libraries for testing MQTT message flows, REST APIs, and JSON payload validation. Includes a library for MQTT (paho-mqtt), a payload validator (jsonschema), and example test suites that exercise an IoT API endpoint.
+A Robot Framework test suite with custom Python libraries — an MQTT testing library, a JSON schema validator, and an API test library. Tests exercise real services (MQTT broker, REST API) and run in CI.
 
-### Tech Coverage
-Robot Framework, Python, paho-mqtt, jsonschema, MQTT, REST API testing, test automation
+### What You'll Learn
+- **Test automation philosophy:** Why automated tests exist, what they catch that manual testing misses
+- **Robot Framework architecture:** Keywords, libraries, suites — how the framework finds and runs your code
+- **Custom Python libraries:** How to write Python that Robot Framework can call as keywords
+- **Threading and concurrency:** Why MQTT callbacks need locks, what a race condition is
+- **JSON Schema validation:** How to validate data structure without writing if/else chains
+- **CI test integration:** How tests run in GitHub Actions, what artifacts are, why test reports matter
+
+### Tech Stack
+Robot Framework, Python, paho-mqtt, jsonschema, requests, GitHub Actions
 
 ### Folder Structure
 ```
-robot-framework-iot-tests/
+test-automation-framework/
 ├── libraries/
 │   ├── MqttTestLibrary.py
 │   ├── PayloadValidator.py
-│   └── DeviceApiLibrary.py
+│   └── ApiTestLibrary.py
 ├── resources/
 │   ├── common.resource
 │   └── schemas/
@@ -1345,7 +1406,7 @@ robot-framework-iot-tests/
 │       └── device_status.json
 ├── suites/
 │   ├── mqtt_integration.robot
-│   ├── device_api.robot
+│   ├── api_tests.robot
 │   ├── payload_validation.robot
 │   └── smoke.robot
 ├── results/                   # .gitignore'd
@@ -1353,76 +1414,74 @@ robot-framework-iot-tests/
 ├── .github/
 │   └── workflows/
 │       └── tests.yml
+├── NOTES.md
 └── README.md
 ```
 
 ### Step-by-Step Prompts
 
-**Phase 1 — MQTT library**
+**Phase 1 — Understand Robot Framework**
 
-> "Write `libraries/MqttTestLibrary.py` — a Robot Framework library for MQTT testing. Class attributes: `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`. Constructor takes `broker` (default localhost) and `port` (default 1883). Keywords:
-> - `Connect To Broker` (client_id) — connects with paho-mqtt, starts loop
-> - `Disconnect From Broker` — stops loop, disconnects
-> - `Subscribe To Topic` (topic, qos=1)
-> - `Publish Message` (topic, payload, qos=1) — accepts dict or string, converts to JSON
-> - `Wait For Message` (topic, timeout=10) — polls with 0.1s sleep, returns payload string, raises AssertionError on timeout
-> - `Message Payload Should Contain` (payload, key, expected) — parses JSON, compares value
-> Use a `threading.Lock` to protect the `_messages` dict updated by `on_message` callback."
+> "I'm learning Robot Framework. **Before any code, explain:**
+> 1. What is Robot Framework and what niche does it fill? Why would someone use it instead of just writing pytest tests?
+> 2. What is keyword-driven testing? How is `Subscribe To Topic    devices/temp    qos=1` different from `client.subscribe('devices/temp', qos=1)` — and why would a QA engineer prefer the first?
+> 3. How does Robot Framework discover Python libraries? What does it do with a method called `wait_for_message` — how does it become the keyword `Wait For Message`?
+> 4. What is `ROBOT_LIBRARY_SCOPE`? Explain TEST CASE, TEST SUITE, and GLOBAL using a database connection example: why creating a new connection per test case is wasteful but using GLOBAL scope causes flaky tests.
+> 5. What are Suite Setup and Suite Teardown — when should I use them?"
 
-**Phase 2 — Payload validator**
+**Phase 2 — MQTT test library (learn threading)**
 
-> "Write `libraries/PayloadValidator.py` — a Robot Framework library with `ROBOT_LIBRARY_SCOPE = 'GLOBAL'`. Keywords:
-> - `Load Schema` (name, schema_path) — loads a JSON schema from file, stores in a dict
-> - `Payload Should Match Schema` (payload, schema_name) — validates using jsonschema.validate, raises AssertionError with the validation error message if it fails
-> Write two JSON schema files in `resources/schemas/`:
-> - `telemetry.json` — requires: device_id (string), type (string, enum: temperature/humidity/vibration), value (number), timestamp (string, format: date-time)
-> - `device_status.json` — requires: device_id (string), status (string, enum: online/offline), last_seen (string, format: date-time)"
+> "Write `libraries/MqttTestLibrary.py` — a class that connects to MQTT, subscribes, publishes, and waits for messages. **Before writing, teach me:**
+> 1. Why does `paho-mqtt` use a background thread for `on_message`? What is a callback function?
+> 2. What is a race condition? In this library, what happens if `Wait For Message` tries to read `_messages` at the exact same time `on_message` is writing to it?
+> 3. What is `threading.Lock`? How does it prevent the race condition? (explain with an analogy: a single-key bathroom — only one person at a time)
+> 4. Why does `Wait For Message` poll with `time.sleep(0.1)` instead of blocking? What is busy-waiting and is there a better alternative?
+> Then write the library with detailed comments on the threading parts."
 
-**Phase 3 — API library + test suites**
+**Phase 3 — Schema validation (learn JSON Schema)**
 
-> "Write `libraries/DeviceApiLibrary.py` — a Robot Framework library for testing a REST API. Constructor takes `base_url`. `ROBOT_LIBRARY_SCOPE = 'TEST SUITE'`. Keywords:
-> - `Get Devices` — GET /api/devices, returns JSON
-> - `Get Device` (device_id) — GET /api/devices/{device_id}
-> - `Post Telemetry` (device_id, metric, value) — POST /api/telemetry with JSON body
-> - `Response Status Should Be` (response, expected) — asserts status code
-> - `Response Should Contain Key` (response_json, key) — asserts key exists
-> Use the `requests` library."
+> "Write `libraries/PayloadValidator.py` and two JSON schemas for telemetry and device status. **First explain:**
+> 1. What is JSON Schema? Why validate with a schema instead of writing `if 'device_id' not in payload: raise Error`?
+> 2. Walk me through a JSON schema file: what do `type`, `properties`, `required`, `enum`, and `format` mean?
+> 3. What error does `jsonschema.validate()` raise on failure? How do I get a useful error message from it?
+> 4. Why use GLOBAL library scope for this validator? (hint: schemas don't change between tests)
+> Write both schemas and the library."
 
-> "Write 4 Robot Framework test suites:
-> 1. `smoke.robot` — import DeviceApiLibrary, verify API is reachable (GET /health returns 200), device list returns data
-> 2. `device_api.robot` — test full CRUD: get list, get single device, post telemetry, verify posted data appears
-> 3. `mqtt_integration.robot` — import MqttTestLibrary, connect to broker, subscribe to topic, publish message, wait for it, validate payload contains expected keys
-> 4. `payload_validation.robot` — import PayloadValidator, load schemas, test valid telemetry passes, test invalid telemetry (missing field, wrong type) fails
-> Use Suite Setup/Teardown for connections. Use variables for base_url, broker, port so CI can override them."
+**Phase 4 — API test library + test suites**
 
-**Phase 4 — CI + README**
+> "Write `libraries/ApiTestLibrary.py` that wraps HTTP requests to a REST API. Then write 4 Robot Framework test suites (smoke, api_tests, mqtt_integration, payload_validation). **For the test suites, explain:**
+> 1. How should I structure a test case? What makes a good test name? (it should read like a requirement)
+> 2. What is Suite Setup vs Test Setup? When do I use each?
+> 3. How do I use Robot Framework variables so the base_url and broker address can be changed in CI without editing the test files?
+> 4. What does `[Documentation]` do in a test case? Who reads it?
+> Write tests where each test name reads as a clear requirement, like 'Device List Should Return All Registered Devices'."
 
-> "Write a GitHub Actions workflow `.github/workflows/tests.yml` that:
-> - Starts a Mosquitto MQTT broker as a service container on port 1883
-> - Installs Python 3.12, pip install requirements.txt
-> - Runs `robot --outputdir results/ suites/`
-> - Uploads results/ as an artifact
-> - Fails the workflow if any test fails"
+**Phase 5 — CI integration**
 
-> "Write README.md: what this project does, how the custom libraries work (library scope explanation with examples), how to run locally (`robot suites/`), how to add new test keywords, CI badge, link to blog post."
+> "Write a GitHub Actions workflow that runs these tests. **Explain:**
+> 1. How do GitHub Actions service containers work? How is the MQTT broker started alongside my tests?
+> 2. What are 'artifacts' in GitHub Actions? Why upload the Robot Framework results folder?
+> 3. What does the `robot` command return as an exit code? How does GitHub Actions know the tests failed?
+> 4. How would I add a badge to my README showing test status? Where does the badge image come from?
+> Write the workflow with comments."
 
 ---
 
 ## Updated Timeline Summary
 
-| # | Project | Type | Primary Blog Post |
-|---|---------|------|-------------------|
-| 1 | DevOps Pipeline Dashboard | Standalone | — |
-| 2 | Cloud Infrastructure Monitor | Standalone | — |
-| 3 | AI-Powered Log Analyzer | Standalone | — |
-| 4 | IoT Sensor Simulator & Platform | Standalone | — |
-| 5 | Self-Service Deployment Platform | Standalone | — |
-| 6 | MQTT Telemetry Pipeline | Blog companion | mqtt-grafana |
-| 7 | Jenkins IoT Pipeline | Blog companion | jenkins-iot-pipeline |
-| 8 | Terraform Azure Infrastructure | Blog companion | terraform-azure |
-| 9 | FastAPI Docker Compose Stack | Blog companion | docker-compose-fastapi |
-| 10 | Ansible Server Automation | Blog companion | ansible-server-automation |
-| 11 | Robot Framework Test Suite | Blog companion | robot-framework-python-libraries |
+| # | Project | Focus Area | Difficulty |
+|---|---------|-----------|------------|
+| 1 | DevOps Pipeline Dashboard | Full-stack backend project | Medium |
+| 2 | Cloud Infrastructure Monitor | Azure, Terraform, monitoring | Medium |
+| 3 | AI-Powered Log Analyzer | AI/LLM, testing, packaging | Medium |
+| 4 | IoT Sensor Simulator & Platform | IoT, microservices, Node.js | Hard |
+| 5 | Self-Service Deployment Platform | Everything combined | Hard |
+| 6 | Real-Time Data Pipeline | MQTT, PostgreSQL, Grafana, Docker | Beginner-friendly |
+| 7 | CI/CD Pipeline From Scratch | Jenkins/GH Actions, testing, Docker | Beginner-friendly |
+| 8 | Infrastructure as Code | Terraform, Azure, networking | Beginner-friendly |
+| 9 | Production-Ready API Template | FastAPI, Docker, Redis, Nginx | Beginner-friendly |
+| 10 | Server Automation Playbooks | Ansible, Linux, security | Beginner-friendly |
+| 11 | Test Automation Framework | Robot Framework, Python, CI | Beginner-friendly |
 
 ### Technology Coverage Matrix
 
@@ -1450,14 +1509,19 @@ robot-framework-iot-tests/
 | Jinja2 | 10 |
 | AI / LLM | 3, 5 |
 
-### Recommended Build Order
+### Recommended Learning Path
 
-**Start with blog companions (Projects 6–11)** — they're smaller, directly back your blog posts, and give you 6 public repos fast. Then tackle the standalone projects (1–5) for deeper portfolio pieces.
+**Start with Projects 6–11** — they're designed as learning exercises with built-in explanations. Each one teaches you a core area of your stack. Once you're comfortable, Projects 1–5 combine everything into bigger portfolio pieces.
 
-1. **Project 9** (FastAPI Compose) — simplest, reusable template, 1–2 days
-2. **Project 6** (MQTT Pipeline) — builds on Project 9 patterns, 2–3 days
-3. **Project 11** (Robot Framework) — standalone test suite, 2 days
-4. **Project 10** (Ansible Playbooks) — no dependencies, 2 days
-5. **Project 7** (Jenkins Pipeline) — uses app from Project 9, 3 days
-6. **Project 8** (Terraform Azure) — needs Azure subscription, 3 days
-7. Then Projects 1–5 in original order
+**Phase 1 — Foundations (start here)**
+1. **Project 9** (API Template) — Learn FastAPI, Docker, caching, reverse proxies. Reuse this template for everything else.
+2. **Project 6** (Data Pipeline) — Learn MQTT, time-series DB, Grafana. Builds on Docker knowledge from Project 9.
+3. **Project 10** (Server Automation) — Learn Ansible, Linux security, secrets. Independent of the others.
+
+**Phase 2 — Level up**
+4. **Project 8** (Infrastructure as Code) — Learn Terraform, Azure, networking. Needs Azure account.
+5. **Project 11** (Test Automation) — Learn Robot Framework, threading, CI. Good after you have an app to test.
+6. **Project 7** (CI/CD Pipeline) — Learn Jenkins, full pipeline, deployment gates. Ties together testing + Docker + Ansible.
+
+**Phase 3 — Big projects**
+7. Projects 1–5 in the original order — these combine everything you learned into showcase pieces.
