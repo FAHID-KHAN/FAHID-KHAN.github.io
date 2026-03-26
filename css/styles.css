@@ -1,15 +1,5 @@
-/*
-=============== 
-Fonts
-===============
-*/
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
 
-/*
-=============== 
-Variables
-===============
-*/
 :root {
   --bg-primary: #0a0a0f;
   --bg-secondary: #111118;
@@ -39,11 +29,6 @@ Variables
   --max-width: 1200px;
 }
 
-/*
-=============== 
-Global Styles
-===============
-*/
 *,
 ::after,
 ::before {
@@ -106,7 +91,6 @@ p {
   h4 { font-size: 1.25rem; }
 }
 
-/* Global Classes */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -198,7 +182,6 @@ p {
   background-clip: text;
 }
 
-/* Fade-in animation */
 .fade-in {
   opacity: 0;
   transform: translateY(30px);
@@ -210,11 +193,6 @@ p {
   transform: translateY(0);
 }
 
-/*
-=============== 
-Navbar
-===============
-*/
 .nav-links {
   display: none;
 }
@@ -320,11 +298,6 @@ Navbar
   box-shadow: var(--shadow-sm);
 }
 
-/*
-=============== 
-Sidebar
-===============
-*/
 .sidebar {
   position: fixed;
   top: 0;
@@ -408,11 +381,6 @@ Sidebar
   transform: rotate(90deg);
 }
 
-/*
-=============== 
-Hero
-===============
-*/
 .hero {
   min-height: 100vh;
   display: flex;
@@ -550,11 +518,6 @@ Hero
   }
 }
 
-/*
-=============== 
-Stats Bar
-===============
-*/
 .stats-bar {
   background: var(--bg-secondary);
   padding: 3rem 0;
@@ -594,11 +557,6 @@ Stats Bar
   margin-bottom: 0;
 }
 
-/*
-=============== 
-About
-===============
-*/
 .about {
   background: var(--bg-secondary);
 }
@@ -653,11 +611,6 @@ About
   }
 }
 
-/*
-=============== 
-Services
-===============
-*/
 .service {
   background: var(--bg-card);
   padding: 2.5rem 2rem;
@@ -745,11 +698,6 @@ Services
   }
 }
 
-/*
-=============== 
-Skills
-===============
-*/
 .skills {
   background: var(--bg-secondary);
 }
@@ -802,11 +750,6 @@ Skills
   background: rgba(14, 165, 233, 0.08);
 }
 
-/*
-=============== 
-Experience Timeline
-===============
-*/
 .timeline-center {
   width: 85vw;
   max-width: 45rem;
@@ -886,11 +829,6 @@ Experience Timeline
   transform: translate(50%, -50%);
 }
 
-/*
-=============== 
-Connect / CTA
-===============
-*/
 .connect {
   min-height: 40vh;
   position: relative;
@@ -935,11 +873,6 @@ Connect / CTA
   color: var(--text-secondary);
 }
 
-/*
-=============== 
-Certifications
-===============
-*/
 .cert-grid {
   display: grid;
   gap: 1.5rem;
@@ -988,11 +921,6 @@ Certifications
   color: var(--text-muted);
 }
 
-/*
-=============== 
-Footer
-===============
-*/
 .footer {
   padding: 3rem 0 2rem;
   background: var(--bg-secondary);
@@ -1020,11 +948,6 @@ Footer
   color: var(--text-muted);
 }
 
-/*
-=============== 
-Single Page (About / Contact)
-===============
-*/
 .single-page {
   background: var(--bg-primary);
   min-height: calc(100vh - 5rem - 150px);
@@ -1045,11 +968,6 @@ Single Page (About / Contact)
   color: var(--accent-1);
 }
 
-/*
-=============== 
-Services Page
-===============
-*/
 .services-hero {
   height: 40vh;
   background: var(--bg-secondary);
@@ -1133,11 +1051,6 @@ Services Page
   }
 }
 
-/*
-=============== 
-Contact Page
-===============
-*/
 .contact-grid {
   display: grid;
   gap: 2rem;
@@ -1191,11 +1104,6 @@ Contact Page
   color: var(--accent-1);
 }
 
-/*
-=============== 
-Process Section
-===============
-*/
 .process-grid {
   display: grid;
   gap: 2rem;
@@ -1244,11 +1152,6 @@ Process Section
   color: var(--text-muted);
 }
 
-/*
-=============== 
-Testimonials
-===============
-*/
 .testimonials-grid {
   display: grid;
   gap: 2rem;
@@ -1315,11 +1218,6 @@ Testimonials
   margin-bottom: 0;
 }
 
-/*
-=============== 
-Case Studies
-===============
-*/
 .case-studies-grid {
   display: grid;
   gap: 2rem;
@@ -1422,11 +1320,6 @@ Case Studies
   font-weight: 500;
 }
 
-/*
-=============== 
-Contact Form
-===============
-*/
 .contact-form-wrapper {
   max-width: 600px;
   margin: 3rem auto 0;
@@ -1506,11 +1399,6 @@ Contact Form
   justify-self: start;
 }
 
-/*
-=============== 
-Blog Page
-===============
-*/
 .blog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -1613,11 +1501,6 @@ Blog Page
   }
 }
 
-/*
-=============== 
-Blog Post (Individual)
-===============
-*/
 .blog-post-container {
   max-width: 800px;
   margin: 0 auto;
@@ -1758,11 +1641,6 @@ Blog Post (Individual)
   }
 }
 
-/*
-=============== 
-Resume Page
-===============
-*/
 .resume-container {
   max-width: 850px;
 }
@@ -1927,7 +1805,6 @@ Resume Page
   line-height: 1.7;
 }
 
-/* Print styles for resume */
 @media print {
   .nav, .sidebar, .footer, .section-title > div {
     display: none !important;
@@ -1970,11 +1847,6 @@ Resume Page
   }
 }
 
-/*
-=============== 
-Skip to Content (Accessibility)
-===============
-*/
 .skip-to-content {
   position: absolute;
   top: -100%;
@@ -1993,11 +1865,6 @@ Skip to Content (Accessibility)
   top: 0;
 }
 
-/*
-=============== 
-Back to Top Button
-===============
-*/
 .back-to-top {
   position: fixed;
   bottom: 2rem;

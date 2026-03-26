@@ -1,11 +1,9 @@
-// Elements
 const navbar = document.querySelector("#nav");
 const navBtn = document.querySelector("#nav-btn");
 const closeBtn = document.querySelector("#close-btn");
 const sidebar = document.querySelector("#sidebar");
 const date = document.querySelector("#date");
 
-// Fixed navbar on scroll
 window.addEventListener("scroll", function () {
   if (window.pageYOffset > 80) {
     navbar.classList.add("navbar-fixed");
@@ -14,26 +12,22 @@ window.addEventListener("scroll", function () {
   }
 });
 
-// Show sidebar
 if (navBtn) {
   navBtn.addEventListener("click", function () {
     sidebar.classList.add("show-sidebar");
   });
 }
 
-// Close sidebar
 if (closeBtn) {
   closeBtn.addEventListener("click", function () {
     sidebar.classList.remove("show-sidebar");
   });
 }
 
-// Set year
 if (date) {
   date.textContent = new Date().getFullYear();
 }
 
-// Scroll-triggered fade-in animations
 const fadeElements = document.querySelectorAll(".fade-in");
 
 if (fadeElements.length > 0) {
@@ -54,7 +48,6 @@ if (fadeElements.length > 0) {
   });
 }
 
-// Back to top button
 const backToTop = document.querySelector(".back-to-top");
 if (backToTop) {
   window.addEventListener("scroll", function () {
