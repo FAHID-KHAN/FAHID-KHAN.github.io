@@ -27,6 +27,41 @@
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 40px rgba(14, 165, 233, 0.12);
   --max-width: 1200px;
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-4deg); }
+  40% { transform: rotate(4deg); }
+  60% { transform: rotate(-2deg); }
+  80% { transform: rotate(2deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+  50% { box-shadow: 0 0 35px rgba(14, 165, 233, 0.55); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.9); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 *,
@@ -111,8 +146,13 @@ p {
 
 .btn:hover {
   background: var(--accent-gradient-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.35);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(14, 165, 233, 0.4);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+  transition: transform 0.1s;
 }
 
 .btn-outline {
@@ -126,6 +166,7 @@ p {
   background: var(--accent-gradient);
   color: #fff;
   border-color: transparent;
+  transform: translateY(-3px) scale(1.03);
 }
 
 .section {
@@ -176,10 +217,12 @@ p {
 }
 
 .gradient-text {
-  background: var(--accent-gradient);
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #38bdf8, #67e8f9, #0ea5e9);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: shimmer 4s linear infinite;
 }
 
 .fade-in {
@@ -361,7 +404,7 @@ p {
   color: var(--accent-3);
   border-color: var(--accent-1);
   background: rgba(14, 165, 233, 0.1);
-  transform: translateY(-3px);
+  transform: translateY(-4px) rotate(-5deg) scale(1.1);
 }
 
 .close-btn {
@@ -400,6 +443,7 @@ p {
   background: radial-gradient(circle, rgba(14, 165, 233, 0.07) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
+  animation: float 8s ease-in-out infinite;
 }
 
 .hero::after {
@@ -412,6 +456,7 @@ p {
   background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
+  animation: float 10s ease-in-out infinite reverse;
 }
 
 .hero-center {
@@ -442,7 +487,14 @@ p {
   font-weight: 400;
   margin-bottom: 1rem;
   letter-spacing: 0.05em;
-  display: block;
+  display: inline-block;
+}
+
+.hero-greeting::after {
+  content: "_";
+  animation: blink 1s step-end infinite;
+  color: var(--accent-1);
+  font-weight: 300;
 }
 
 .hero-info h1 {
@@ -488,6 +540,12 @@ p {
   position: relative;
   border: 2px solid var(--border-color);
   box-shadow: var(--shadow-glow);
+  transition: transform 0.4s var(--bounce), box-shadow 0.4s ease;
+}
+
+.hero-photo:hover {
+  transform: rotate(-2deg) scale(1.03);
+  box-shadow: 0 0 50px rgba(14, 165, 233, 0.2);
 }
 
 @media screen and (min-width: 992px) {
@@ -637,8 +695,12 @@ p {
 .service:hover {
   background: var(--bg-card-hover);
   border-color: var(--border-color);
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-glow);
+}
+
+.service:hover .service-icon {
+  animation: wiggle 0.5s var(--bounce);
 }
 
 .service:hover::before {
@@ -682,6 +744,12 @@ p {
   color: var(--accent-3);
   border: 1px solid rgba(14, 165, 233, 0.15);
   font-weight: 500;
+  transition: all 0.25s var(--bounce);
+}
+
+.service:hover .service-tag {
+  background: rgba(14, 165, 233, 0.14);
+  border-color: rgba(14, 165, 233, 0.25);
 }
 
 @media screen and (min-width: 676px) {
@@ -748,6 +816,8 @@ p {
   border-color: var(--accent-1);
   color: var(--accent-3);
   background: rgba(14, 165, 233, 0.08);
+  transform: translateY(-2px) scale(1.05);
+  transition: all 0.25s var(--bounce);
 }
 
 .timeline-center {
@@ -820,7 +890,7 @@ p {
   color: #fff;
   font-weight: 700;
   font-size: 0.85rem;
-  box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  animation: pulse-glow 2.5s ease-in-out infinite;
 }
 
 .timeline-item:nth-child(even) .number { left: 0; }
@@ -899,8 +969,12 @@ p {
 
 .cert-card:hover {
   border-color: var(--border-color);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-glow);
+}
+
+.cert-card:hover .cert-icon {
+  animation: wiggle 0.5s var(--bounce);
 }
 
 .cert-card .cert-icon {
@@ -941,6 +1015,7 @@ p {
 .footer .social-icon:hover {
   color: var(--accent-3);
   border-color: var(--accent-1);
+  transform: translateY(-3px) rotate(-5deg);
 }
 
 .footer p {
@@ -1075,8 +1150,12 @@ p {
 
 .contact-card:hover {
   border-color: var(--border-color);
-  transform: translateY(-4px);
+  transform: translateY(-6px) rotate(-1deg);
   box-shadow: var(--shadow-glow);
+}
+
+.contact-card:hover .contact-icon {
+  animation: wiggle 0.5s var(--bounce);
 }
 
 .contact-icon {
@@ -1127,6 +1206,15 @@ p {
   padding: 2rem 1.5rem;
   position: relative;
   counter-increment: process;
+  transition: transform 0.3s var(--bounce);
+}
+
+.process-step:hover {
+  transform: translateY(-4px);
+}
+
+.process-step:hover::before {
+  animation: wiggle 0.5s var(--bounce);
 }
 
 .process-step::before {
@@ -1245,7 +1333,7 @@ p {
 
 .case-card:hover {
   border-color: var(--border-color);
-  transform: translateY(-4px);
+  transform: translateY(-6px) rotate(-0.5deg);
   box-shadow: var(--shadow-glow);
 }
 
@@ -1418,12 +1506,20 @@ p {
 .blog-card-link:hover .blog-card {
   border-color: var(--accent-1);
   box-shadow: var(--shadow-glow);
-  transform: translateY(-4px);
+  transform: translateY(-6px) rotate(-0.5deg);
 }
 
 .blog-card-link:hover .blog-read-more {
   color: var(--accent-1);
-  gap: 0.6rem;
+  gap: 0.75rem;
+}
+
+.blog-read-more i {
+  transition: transform 0.3s var(--bounce);
+}
+
+.blog-card-link:hover .blog-read-more i {
+  transform: translateX(3px);
 }
 
 .blog-card {
@@ -1889,11 +1985,13 @@ p {
 .back-to-top.visible {
   opacity: 1;
   visibility: visible;
+  animation: pop-in 0.4s var(--bounce) both;
 }
 
 .back-to-top:hover {
   background: var(--accent-1);
   color: var(--bg-primary);
   border-color: var(--accent-1);
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
 }
