@@ -223,7 +223,7 @@ class PayloadValidator:
                 f"Payload does not match schema '{schema_name}': {e.message}"
             )</code></pre>
 
-        <h2>Lessons Learned</h2>
+        <h2>A Few Things I Wish I Knew Earlier</h2>
         <ul>
           <li><strong>Name methods with underscores.</strong> Robot Framework converts <code>wait_for_message</code> to <code>Wait For Message</code> automatically. Keep Python naming conventions.</li>
           <li><strong>Use threading locks for async callbacks.</strong> MQTT&#39;s <code>on_message</code> runs on a background thread. Without locks, you get race conditions in message retrieval.</li>

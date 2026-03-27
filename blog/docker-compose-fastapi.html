@@ -212,7 +212,7 @@ async def get_device_summary(device_id: str):
     r.setex(cache_key, 300, json.dumps(summary))  # 5 min TTL
     return summary</code></pre>
 
-        <h2>Lessons Learned</h2>
+        <h2>Stuff That Bit Me</h2>
         <ul>
           <li><strong>Use health checks and <code>depends_on</code> conditions.</strong> Without them, your app container starts before PostgreSQL is ready, and you get connection errors on startup. The <code>service_healthy</code> condition solves this cleanly.</li>
           <li><strong>Never put secrets in the Compose file.</strong> Use <code>env_file: .env</code> and add <code>.env</code> to <code>.gitignore</code>. In CI, inject secrets from your pipeline&#39;s secret store.</li>

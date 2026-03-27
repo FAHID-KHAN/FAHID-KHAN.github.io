@@ -182,7 +182,7 @@ ORDER BY ts;</code></pre>
           Grafana&#39;s time-series panel handles the rest &mdash; one line per device, auto-refreshing every 10 seconds. I also added a stat panel for current values and an alert rule that fires when temperature exceeds 60&deg;C.
         </p>
 
-        <h2>Lessons Learned</h2>
+        <h2>What I&#39;d Do Differently</h2>
         <ul>
           <li><strong>Connection pooling matters.</strong> The initial version opened a new DB connection per message. At 500 msg/sec, that killed PostgreSQL. Switching to a connection pool (or a single persistent connection with reconnect logic) solved it.</li>
           <li><strong>Use QoS 1 for telemetry.</strong> QoS 0 (&ldquo;fire and forget&rdquo;) loses messages under load. QoS 1 guarantees at-least-once delivery, which is acceptable for sensor data where duplicates are fine but gaps are not.</li>

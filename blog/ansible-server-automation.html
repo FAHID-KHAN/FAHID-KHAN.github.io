@@ -191,7 +191,7 @@ ansible-playbook playbooks/deploy.yml \
   --vault-password-file ~/.vault_pass</code></pre>
         <p>Vault-encrypted files can live in version control safely. The decryption key stays out of the repo.</p>
 
-        <h2>Lessons Learned</h2>
+        <h2>Things Worth Knowing</h2>
         <ul>
           <li><strong>Always use <code>--check</code> first.</strong> Dry-run mode shows what would change without changing anything. Invaluable before running against production.</li>
           <li><strong>Tag your tasks.</strong> Adding <code>tags: [deploy]</code> lets you run just <code>ansible-playbook deploy.yml --tags deploy</code> instead of the whole playbook.</li>

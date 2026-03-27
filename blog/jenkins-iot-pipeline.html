@@ -205,7 +205,7 @@ Telemetry End-to-End
     ${value}=    Get Latest Value    sensor-01    temperature
     Should Be Equal As Numbers    ${value}    23.5</code></pre>
 
-        <h2>Key Takeaways</h2>
+        <h2>Things I Learned the Hard Way</h2>
         <ul>
           <li><strong>Pin your dependencies.</strong> We hit a production issue because <code>pip install</code> pulled a newer minor version of a library that changed behaviour. Now everything is pinned in <code>requirements.txt</code> with exact versions.</li>
           <li><strong>Fail fast.</strong> Lint and unit tests run first. If code style or basic logic is broken, the pipeline stops immediately &mdash; don&#39;t waste 20 minutes on integration tests for code that won&#39;t pass linting.</li>
