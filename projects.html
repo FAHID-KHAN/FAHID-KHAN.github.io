@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="stylesheet" href="./fontawesome-free-5.12.1-web/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
@@ -68,7 +68,7 @@
         <h1>Services</h1>
         <div class="underline"></div>
         <p style="max-width: 600px; margin: 1rem auto 0; color: var(--text-secondary);">
-          These are the three areas I work in day to day. Not trying to do everything &mdash; just these, and doing them properly.
+          These are the three areas I work in day to day. Not trying to do everything, just these three and doing them properly.
         </p>
       </div>
     </div>
@@ -82,27 +82,30 @@
 
         <div class="service-detail fade-in">
           <i class="fas fa-server service-icon"></i>
-          <h4>Backend Development</h4>
-          <p>I build the stuff that runs on servers &mdash; APIs, background services, database logic. Mostly Python, sometimes Node.js.</p>
+          <h4>Python &amp; Backend</h4>
+          <p>I build Python backends, REST APIs, and the tooling that holds everything together. From quick automation scripts to full production web apps.</p>
           <ul>
-            <li>RESTful API design and development</li>
-            <li>Python backend services with FastAPI</li>
-            <li>Node.js / Express application development</li>
-            <li>SQL and NoSQL databases (PostgreSQL, Redis, MongoDB)</li>
-            <li>Microservices and modular architecture</li>
-            <li>Custom Python packages and libraries</li>
+            <li>Production REST APIs with FastAPI: analytics pipelines, IoT data feeds, async task runners, built to stay up without babysitting</li>
+            <li>Full-stack apps shipped to production (see Traffic Insight BD)</li>
+            <li>Custom Python packages, libraries, and automation scripts</li>
+            <li>SQL and NoSQL databases (PostgreSQL, SQLite, Redis)</li>
+            <li>Web scraping pipelines with BeautifulSoup and Requests</li>
+            <li>LLM / AI integration with structured output and validation</li>
           </ul>
         </div>
 
         <div class="service-detail fade-in">
           <i class="fas fa-cloud service-icon"></i>
           <h4>Cloud Infrastructure</h4>
-          <p>Setting up and managing Azure environments &mdash; everything from IoT Hub connections to Terraform configs and Grafana dashboards.</p>
+          <p>Setting up and managing cloud environments across Azure and AWS. From IoT Hub and Kubernetes clusters to Terraform configs and Grafana dashboards.</p>
           <ul>
             <li>Azure cloud architecture and resource management</li>
             <li>Azure IoT Hub integration for industrial IoT</li>
+            <li>AWS EKS for managed Kubernetes cluster setup and operations</li>
+            <li>AWS ECS for container workload deployment and task management</li>
+            <li>Kubernetes manifests, Helm charts, and cluster configuration</li>
             <li>MQTT / Mosquitto messaging for device communication</li>
-            <li>Terraform for Infrastructure as Code (IaC)</li>
+            <li>Terraform for Infrastructure as Code across Azure and AWS</li>
             <li>Environment monitoring with Grafana</li>
             <li>Cloud cost optimisation and scaling</li>
           </ul>
@@ -111,7 +114,7 @@
         <div class="service-detail fade-in">
           <i class="fas fa-infinity service-icon"></i>
           <h4>DevOps &amp; CI/CD</h4>
-          <p>Pipelines, containers, automation scripts, testing &mdash; making sure code gets from a laptop to a live server without drama.</p>
+          <p>Pipelines, containers, automation scripts, testing. Making sure code gets from a laptop to a live server without drama.</p>
           <ul>
             <li>Jenkins pipeline configuration and management</li>
             <li>Docker and Docker Compose containerisation</li>
@@ -130,7 +133,7 @@
       <div class="section-title">
         <h2>Selected Work</h2>
         <div class="underline"></div>
-        <p class="section-subtitle">Some things I&#39;ve worked on (details kept vague where I need to)</p>
+        <p class="section-subtitle">Work projects and personal builds. Some details kept vague where needed.</p>
       </div>
       <div class="section-center case-studies-grid">
         <div class="case-card">
@@ -139,7 +142,7 @@
             <h4>CI/CD Pipeline for IoT Platform</h4>
           </div>
           <div class="case-card-body">
-            <p>Set up and maintained Jenkins pipelines for our IoT platform. Builds, tests, deployments &mdash; all automated, no one has to touch anything manually anymore.</p>
+            <p>Set up and maintained Jenkins pipelines for our IoT platform. Builds, tests, deployments, all automated. Nobody has to touch anything manually anymore.</p>
             <div class="case-metrics">
               <div class="case-metric">
                 <span class="metric-value">70%</span>
@@ -208,6 +211,33 @@
             </div>
           </div>
         </div>
+        <div class="case-card">
+          <div class="case-card-header">
+            <span class="case-label">Full-Stack &middot; AI &middot; Civic Tech</span>
+            <h4><a href="https://trafficinsightbd.org" target="_blank" rel="noopener noreferrer" style="color: inherit;">Traffic Insight BD &nearr;</a></h4>
+          </div>
+          <div class="case-card-body">
+            <p>A real-time road accident analytics platform for Bangladesh. An AI pipeline scrapes and processes news articles with OpenAI, then surfaces the patterns through an interactive dashboard with maps, trend forecasts, cluster detection, and danger zone rankings.</p>
+            <div class="case-metrics">
+              <div class="case-metric">
+                <span class="metric-value">91</span>
+                <span class="metric-label">Automated Tests</span>
+              </div>
+              <div class="case-metric">
+                <span class="metric-value">Live</span>
+                <span class="metric-label">In Production</span>
+              </div>
+            </div>
+            <div class="case-tags">
+              <span class="case-tag">Python</span>
+              <span class="case-tag">FastAPI</span>
+              <span class="case-tag">React</span>
+              <span class="case-tag">Docker</span>
+              <span class="case-tag">OpenAI</span>
+              <span class="case-tag">GitHub Actions</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -215,7 +245,7 @@
       <div class="section-title">
         <h2>How I Work</h2>
         <div class="underline"></div>
-        <p class="section-subtitle">Nothing fancy &mdash; just a process that works</p>
+        <p class="section-subtitle">Nothing fancy, just a process that works</p>
       </div>
       <div class="section-center process-grid">
         <div class="process-step">
@@ -228,7 +258,7 @@
         </div>
         <div class="process-step">
           <h4>Build &amp; Ship</h4>
-          <p>Write the code, test it, get feedback, iterate. No big reveal at the end &mdash; you see progress as it happens.</p>
+          <p>Write the code, test it, get feedback, iterate. No big reveals. You see progress as it happens.</p>
         </div>
         <div class="process-step">
           <h4>Stick Around</h4>

@@ -465,6 +465,7 @@ p {
   position: relative;
   z-index: 1;
   padding-top: 5rem;
+  padding-bottom: 3rem;
   width: 90vw;
   max-width: var(--max-width);
   margin: 0 auto;
@@ -498,7 +499,7 @@ p {
 }
 
 .hero-info h1 {
-  font-size: 3rem;
+  font-size: clamp(2.2rem, 8vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   margin-bottom: 0.5rem;
@@ -508,7 +509,7 @@ p {
 .hero-info h4 {
   color: var(--text-secondary);
   font-weight: 400;
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 3.5vw, 1.1rem);
   margin-bottom: 2rem;
   max-width: 600px;
   margin-left: auto;
@@ -529,12 +530,14 @@ p {
 }
 
 .hero-img {
-  display: none;
+  display: flex;
+  justify-content: center;
+  margin-top: 2.5rem;
 }
 
 .hero-photo {
-  max-width: 22rem;
-  max-height: 26rem;
+  max-width: 13rem;
+  max-height: 16rem;
   object-fit: cover;
   border-radius: var(--radius-lg);
   position: relative;
@@ -556,8 +559,15 @@ p {
   .hero-btns { justify-content: flex-start; }
   .hero-icons { justify-content: flex-start; }
   .hero-img {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: relative;
+    margin-top: 0;
+  }
+  .hero-photo {
+    max-width: 22rem;
+    max-height: 26rem;
   }
   .hero-center {
     grid-template-columns: 1fr 1fr;
@@ -758,6 +768,9 @@ p {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
   }
+  .service {
+    margin-bottom: 0;
+  }
 }
 
 @media screen and (min-width: 992px) {
@@ -788,9 +801,9 @@ p {
   }
 }
 
-@media screen and (min-width: 992px) {
+@media screen and (min-width: 1200px) {
   .skills-center {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -875,6 +888,33 @@ p {
 
 .timeline-item:last-child {
   border-bottom-left-radius: 0;
+}
+
+@media screen and (max-width: 600px) {
+  .timeline-center {
+    width: 92vw;
+  }
+  .timeline-item,
+  .timeline-item:nth-child(even),
+  .timeline-item:nth-child(odd) {
+    border-top: none;
+    border-right: none;
+    border-left: 2px solid var(--border-color);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin: 0;
+    padding: 1.75rem 1.25rem 1.75rem 2rem;
+  }
+  .timeline-item:first-child {
+    border-top: none;
+  }
+  .number {
+    left: 0 !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+  }
 }
 
 .number {
