@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fahid A. Khan — CV</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+      color: #1a1a1a;
+      background: #f0f0f0;
+    }
+
+    .page {
+      background: #fff;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2.75rem 3.25rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+    }
+
+    .cv-header {
+      border-bottom: 2px solid #1a1a1a;
+      padding-bottom: 0.9rem;
+      margin-bottom: 1.3rem;
+    }
+
+    .cv-header h1 {
+      font-size: 23pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .cv-header .cv-title {
+      font-size: 10.5pt;
+      color: #555;
+      margin: 0.25rem 0 0.6rem;
+    }
+
+    .cv-contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.1rem 1.4rem;
+      font-size: 9.5pt;
+      color: #444;
+    }
+
+    .cv-contact a { color: #444; text-decoration: none; }
+    .cv-contact a:hover { text-decoration: underline; }
+
+    .print-btn {
+      display: inline-block;
+      margin-top: 0.7rem;
+      padding: 0.35rem 0.9rem;
+      font-size: 9pt;
+      font-family: inherit;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .print-btn:hover { background: #333; }
+
+    .cv-section { margin-bottom: 1.2rem; }
+
+    .cv-section h2 {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.18rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .cv-entry { margin-bottom: 0.85rem; }
+    .cv-entry:last-child { margin-bottom: 0; }
+
+    .cv-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 0.08rem;
+    }
+
+    .cv-entry-header h3 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .cv-entry-header h3 a { color: #555; text-decoration: none; font-weight: 400; }
+
+    .cv-entry-header .date {
+      font-size: 9.5pt;
+      color: #555;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .cv-entry .company {
+      font-size: 9.5pt;
+      color: #555;
+      margin-bottom: 0.35rem;
+    }
+
+    .cv-entry ul { list-style: none; padding: 0; }
+
+    .cv-entry ul li {
+      font-size: 10pt;
+      color: #2a2a2a;
+      padding-left: 1.1rem;
+      position: relative;
+      margin-bottom: 0.22rem;
+      line-height: 1.5;
+    }
+
+    .cv-entry ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #777;
+    }
+
+    .cv-summary {
+      font-size: 10pt;
+      color: #2a2a2a;
+      line-height: 1.6;
+    }
+
+    .skill-row {
+      font-size: 10pt;
+      color: #2a2a2a;
+      margin-bottom: 0.25rem;
+      line-height: 1.45;
+    }
+
+    .skill-row strong { color: #1a1a1a; }
+
+    /* ─── PRINT ─── */
+    @media print {
+      body {
+        background: #fff;
+        font-size: 9pt;
+        line-height: 1.35;
+        color: #000;
+      }
+
+      .page {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+        box-shadow: none;
+      }
+
+      .print-btn { display: none; }
+
+      @page {
+        size: A4;
+        margin: 11mm 14mm;
+      }
+
+      .cv-header {
+        padding-bottom: 0.45rem;
+        margin-bottom: 0.65rem;
+        border-bottom-width: 1.5px;
+      }
+
+      .cv-header h1       { font-size: 18pt; }
+      .cv-header .cv-title { font-size: 9.5pt; margin: 0.15rem 0 0.3rem; }
+      .cv-contact         { font-size: 8.5pt; gap: 0.05rem 1.1rem; }
+
+      .cv-section         { margin-bottom: 0.55rem; }
+
+      .cv-section h2 {
+        font-size: 7.5pt;
+        margin-bottom: 0.3rem;
+        padding-bottom: 0.1rem;
+        page-break-after: avoid;
+      }
+
+      .cv-entry           { margin-bottom: 0.4rem; page-break-inside: avoid; }
+      .cv-entry:last-child { margin-bottom: 0; }
+      .cv-entry-header    { margin-bottom: 0.04rem; page-break-after: avoid; }
+
+      .cv-entry-header h3 { font-size: 9.5pt; }
+      .cv-entry-header .date { font-size: 8.5pt; }
+
+      .cv-entry .company  { font-size: 8.5pt; margin-bottom: 0.15rem; }
+
+      .cv-entry ul li {
+        font-size: 9pt;
+        line-height: 1.35;
+        margin-bottom: 0.1rem;
+      }
+
+      .cv-summary {
+        font-size: 9pt;
+        line-height: 1.45;
+      }
+
+      .skill-row {
+        font-size: 9pt;
+        line-height: 1.35;
+        margin-bottom: 0.12rem;
+      }
+
+      a { color: inherit; text-decoration: none; }
+    }
+
+    @media screen and (max-width: 640px) {
+      .page { margin: 0; padding: 1.5rem 1.25rem; box-shadow: none; }
+      .cv-header h1 { font-size: 18pt; }
+      .cv-entry-header { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="cv-header">
+    <h1>Fahid A. Khan</h1>
+    <p class="cv-title">Software Engineer &mdash; Cloud, DevOps &amp; Backend</p>
+    <div class="cv-contact">
+      <span>+358 44 929 8457</span>
+      <span>fahidkhan1999.al@gmail.com</span>
+      <span>Tampere, Finland</span>
+      <a href="https://linkedin.com/in/fahid-a-khan-46758819b" target="_blank">linkedin.com/in/fahid-a-khan</a>
+      <a href="https://github.com/FAHID-KHAN" target="_blank">github.com/FAHID-KHAN</a>
+      <a href="https://fahid-khan.github.io" target="_blank">fahid-khan.github.io</a>
+    </div>
+    <button class="print-btn" onclick="window.print()">&#x2193; Save as PDF</button>
+  </header>
+
+  <section class="cv-section">
+    <h2>Professional Summary</h2>
+    <p class="cv-summary">
+      Software Engineer with 5+ years in backend development, cloud infrastructure, and DevOps.
+      At Treon, contributing to an industrial IoT platform across Python backend services, Jenkins CI/CD,
+      Azure and AWS infrastructure with Terraform, Kubernetes, MQTT broker management, and Grafana monitoring.
+      Recently shipped Traffic Insight BD, a full-stack FastAPI and React web app, to production with 91 automated tests. AZ-400 certified.
+    </p>
+  </section>
+
+  <section class="cv-section">
+    <h2>Experience</h2>
+
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Software Design Engineer</h3>
+        <span class="date">Sep 2021 &ndash; Present</span>
+      </div>
+      <p class="company">Treon Oy &middot; Tampere, Finland</p>
+      <ul>
+        <li>Build Python backend services and data pipelines for MQTT telemetry ingestion, payload parsing, and PostgreSQL storage from thousands of industrial sensors running around the clock</li>
+        <li>Manage Azure cloud infrastructure with Terraform (IoT Hub, virtual networks, storage, environment lifecycle) and work with AWS EKS and ECS for container orchestration, rolling deployments, and workload scaling</li>
+        <li>Design and maintain Jenkins CI/CD pipelines covering build, automated test execution, Docker image publishing, and gated multi-environment deployments</li>
+        <li>Configure Mosquitto MQTT brokers for device communication; deploy services with Docker and Docker Compose; automate server provisioning with Ansible; configure Nginx as a reverse proxy and manage Linux systems</li>
+        <li>Write Robot Framework test suites with custom Python libraries for integration and regression testing; build and maintain Grafana dashboards for real-time IoT telemetry monitoring and alerting</li>
+      </ul>
+    </div>
+
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Junior Software Developer</h3>
+        <span class="date">Feb 2021 &ndash; Apr 2021</span>
+      </div>
+      <p class="company">Devolution Oy &middot; Tampere, Finland</p>
+      <ul>
+        <li>Built internal tooling with React Native, Firebase, and Java; wrote unit tests with Jest in an Agile sprint team</li>
+      </ul>
+    </div>
+
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Software Developer Intern</h3>
+        <span class="date">Jan 2020 &ndash; Aug 2020</span>
+      </div>
+      <p class="company">i4ware Software &middot; Tampere, Finland</p>
+      <ul>
+        <li>Built the company website and career portal with React and JavaScript; delivered work in sprint-based Agile workflows using Jira</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="cv-section">
+    <h2>Projects</h2>
+
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Traffic Insight BD &nbsp;<a href="https://trafficinsightbd.org" target="_blank">trafficinsightbd.org</a></h3>
+        <span class="date">2025 &ndash; Present</span>
+      </div>
+      <p class="company">Full-stack AI web application &middot; Personal Project &middot; Co-built with Md Rafeedul Bar Chowdhury</p>
+      <ul>
+        <li>Designed the full backend data pipeline: news scraping with BeautifulSoup4, OpenAI-powered structured extraction with Pydantic, and a FastAPI API serving trend forecasts, danger zone rankings, and cluster detection</li>
+        <li>Multi-stage Docker build, Docker Compose dev/prod environments, GitHub Actions CI/CD with parallel jobs; React 19 + Vite frontend with Leaflet maps and Chart.js dashboards</li>
+        <li>91 automated tests (pytest, httpx, Vitest); production hardened with rate limiting, CSP, and HSTS middleware</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="cv-section">
+    <h2>Technical Skills</h2>
+    <div class="skill-row"><strong>Cloud &amp; Infrastructure:</strong> Azure (AZ-400), Azure IoT Hub, AWS EKS, AWS ECS, Kubernetes, Terraform, MQTT / Mosquitto, Grafana, Linux Systems</div>
+    <div class="skill-row"><strong>DevOps &amp; CI/CD:</strong> Jenkins, Docker, Docker Compose, Ansible, Nginx, GitHub Actions, Bash / YAML, Git / GitHub</div>
+    <div class="skill-row"><strong>Testing:</strong> Robot Framework, pytest, httpx, Vitest, Jest</div>
+    <div class="skill-row"><strong>Languages &amp; Backend:</strong> Python, FastAPI, Node.js, SQL, PostgreSQL, MongoDB, SQLite, Redis</div>
+    <div class="skill-row"><strong>AI &amp; Data:</strong> OpenAI API, BeautifulSoup4, APScheduler, Pydantic</div>
+    <div class="skill-row"><strong>Workflow:</strong> System Design, Agile / Scrum, Jira, Code Reviews, Technical Documentation</div>
+    <div class="skill-row"><strong>Languages:</strong> English (professional), Finnish (conversational)</div>
+  </section>
+
+  <section class="cv-section">
+    <h2>Education</h2>
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Master's in Software, Web &amp; Cloud Engineering</h3>
+        <span class="date">2022 &ndash; 2024</span>
+      </div>
+      <p class="company">Tampere University &middot; Tampere, Finland</p>
+    </div>
+    <div class="cv-entry">
+      <div class="cv-entry-header">
+        <h3>Bachelor's in Computer Software Engineering</h3>
+        <span class="date">2018 &ndash; 2022</span>
+      </div>
+      <p class="company">Tampere University &middot; Tampere, Finland &middot; GPA 4.2 / 5.0</p>
+    </div>
+  </section>
+
+  <section class="cv-section">
+    <h2>Certifications</h2>
+    <div class="cv-entry">
+      <ul>
+        <li><strong>AZ-400:</strong> Designing &amp; Implementing Microsoft DevOps Solutions &mdash; Codecademy, Oct 2025</li>
+        <li><strong>Software Design Principles</strong> &mdash; Codecademy, Aug 2025</li>
+        <li><strong>AZ-104:</strong> Microsoft Azure Administrator &mdash; Course Completed, exam pending</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="cv-section">
+    <h2>Community &amp; Volunteering</h2>
+    <div class="cv-entry">
+      <ul>
+        <li><strong>Erasmus Plus Volunteer</strong> &mdash; Awareness against discrimination and hate speech; COSI organisation, Romania (Nov 2024 &ndash; Present)</li>
+        <li><strong>Tamko Student Union</strong> &mdash; Member and volunteer since 2018, bridging Finnish culture with international students</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
